@@ -159,13 +159,18 @@ private fun SettingsTextField(
     OutlinedTextField(
         value = text,
         onValueChange = { text = it },
-        label = { Text(label) },
+        label = { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        singleLine = true
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
     )
     Button(
         onClick = { onSave(text) },
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 8.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     ) {
         Text("Save")
     }
@@ -181,14 +186,19 @@ private fun SettingsPasswordField(
     OutlinedTextField(
         value = text,
         onValueChange = { text = it },
-        label = { Text(label) },
+        label = { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation()
+        visualTransformation = PasswordVisualTransformation(),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
     )
     Button(
         onClick = { onSave(text) },
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 8.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     ) {
         Text("Save")
     }

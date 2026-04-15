@@ -64,31 +64,39 @@ class VoicePipeline(
     }
 
     suspend fun startListening() {
+        // Always reset to allow re-entry
         if (_state.value is VoicePipelineState.Speaking) {
             tts.stop()
         }
+        stt.stopListening()
 
         wakeWordDetector?.stop()
         _state.value = VoicePipelineState.Listening
         resetWatchdog()
 
         var finalText = ""
-        stt.startListening().collect { result ->
-            when (result) {
-                is SttResult.Partial -> { /* UI can observe */ }
-                is SttResult.Final -> { finalText = result.text }
-                is SttResult.Error -> {
-                    _state.value = VoicePipelineState.Error(result.message)
-                    resumeAfterError()
-                    return@collect
+        try {
+            stt.startListening().collect { result ->
+                when (result) {
+                    is SttResult.Partial -> { /* UI can observe */ }
+                    is SttResult.Final -> { finalText = result.text }
+                    is SttResult.Error -> {
+                        Timber.w("STT error: ${result.message}")
+                        _state.value = VoicePipelineState.Idle
+                        return@collect
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Timber.e(e, "STT startListening failed")
+            _state.value = VoicePipelineState.Idle
+            return
         }
 
         if (finalText.isNotBlank()) {
             processUserInput(finalText)
         } else {
-            returnToListeningOrIdle()
+            _state.value = VoicePipelineState.Idle
         }
     }
 
@@ -155,8 +163,7 @@ class VoicePipeline(
             returnToListeningOrIdle()
         } catch (e: Exception) {
             Timber.e(e, "Voice pipeline error")
-            _state.value = VoicePipelineState.Error(e.message ?: "Unknown error")
-            resumeAfterError()
+            _state.value = VoicePipelineState.Idle
         }
     }
 
