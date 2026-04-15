@@ -86,12 +86,11 @@ class EmbeddedLlmProvider(
     }
 
     private fun buildPrompt(messages: List<AssistantMessage>, tools: List<ToolSchema>): String {
-        return promptBuilder.build(
-            systemPrompt = config.systemPrompt,
-            messages = messages,
-            tools = tools,
-            maxPromptChars = config.contextSize * 3 // rough chars-per-token estimate
-        )
+        // Minimal prompt for fast inference — no tool schemas, no history
+        val lastUserMsg = messages.lastOrNull { it is AssistantMessage.User } as? AssistantMessage.User
+            ?: return "<start_of_turn>user\nHello<end_of_turn>\n<start_of_turn>model\n"
+
+        return "<start_of_turn>user\n${lastUserMsg.content}<end_of_turn>\n<start_of_turn>model\n"
     }
 
     private fun parseResponse(response: String): AssistantMessage {
