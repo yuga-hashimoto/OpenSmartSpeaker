@@ -1,129 +1,102 @@
-# OpenSmartSpeaker
+# open-smart-speaker
 
-A self-contained, tablet-first Android smart speaker that runs entirely on-device — like Alexa, but open source and private. No external servers required.
+**あなたの古いタブレットを、プライベートなスマートスピーカーに変える。**
 
-Features:
-- **On-device LLM** via llama.cpp (Gemma 4 E2B/E4B)
-- **Direct device control** via Matter, SwitchBot, MQTT, BLE
-- **Optional backends**: OpenClaw, OpenAI-compatible endpoints, Home Assistant
+Google Home や Alexa のように声で家電を操作できる Android アプリ。ただし、クラウドにデータを送らない。AI も音声認識も、全てタブレットの中で動く。
 
-## Architecture
+## 何ができるか
 
+**「リビングの電気つけて」** と話しかけるだけで、照明がつく。
+
+- 声で家電を操作（照明ON/OFF、エアコン温度変更、カーテン開閉）
+- 質問に答える（天気、時間、一般知識）
+- 壁掛けタブレットとして常時表示（時計、天気、デバイス状態）
+- ウェイクワード「Hey Speaker」で起動、ハンズフリー操作
+
+## なぜこれが必要か
+
+| 既存のスマートスピーカー | open-smart-speaker |
+|---|---|
+| 音声データがクラウドに送信される | **全てデバイス上で処理。外部通信なし** |
+| 月額料金やサブスクが必要な機能がある | **完全無料、オープンソース** |
+| 特定メーカーのデバイスしか操作できない | **SwitchBot、Matter、MQTT 対応機器を横断操作** |
+| インターネットが切れると使えない | **オフラインでも動作** |
+| カスタマイズできない | **AI モデルもウェイクワードも変更可能** |
+
+## 対応デバイス
+
+| プロトコル | 対応機器の例 |
+|-----------|------------|
+| **SwitchBot** | ボット、カーテン、温湿度計、プラグ、照明 |
+| **Matter** | Apple/Google/Amazon 共通規格の新世代デバイス |
+| **MQTT** | Shelly、Tasmota、その他 DIY スマートホーム機器 |
+| **Home Assistant** | HA サーバーを持っている人は全デバイス連携可能（任意） |
+
+## 画面モード
+
+| モード | 用途 |
+|-------|------|
+| **Chat** | AI と会話。テキストでも音声でも |
+| **Dashboard** | 家中のデバイスをカード表示。タップで ON/OFF |
+| **Ambient** | 壁掛け時計。天気・温度・湿度を常時表示 |
+
+## セットアップ
+
+### 必要なもの
+- Android タブレット（Android 9以上、RAM 8GB 推奨）
+- 操作したいスマートホームデバイス（SwitchBot 等）
+
+### 手順
+1. APK をインストール
+2. マイクの権限を許可
+3. Settings で接続するデバイスの設定を入力
+   - SwitchBot: アプリから取得した Token と Secret
+   - MQTT: ブローカーの URL
+4. AI モデルファイル（Gemma 2B `.task`）をアプリに配置
+5. 「Hey Speaker」と話しかけるか、マイクボタンをタップ
+
+### ビルド（開発者向け）
+```bash
+./gradlew assembleDebug  # ビルド
+./gradlew test           # テスト
 ```
-OpenSmartSpeaker
-├── Android UI / Smart Display
-│   ├── Chat mode
-│   ├── Dashboard mode (device cards)
-│   └── Ambient mode (clock, weather)
-├── Voice Runtime
-│   ├── Wake word (Vosk-based)
-│   ├── STT (Android SpeechRecognizer)
-│   ├── TTS (Android TTS)
-│   └── 7-state pipeline with barge-in
-├── AI Backends (switchable)
-│   ├── EmbeddedLlmProvider (llama.cpp JNI, on-device)
-│   ├── OpenClawProvider (WebSocket, optional)
-│   ├── OpenAiCompatibleProvider (REST + SSE, optional)
-│   └── ConversationRouter (Manual / Auto / Failover / LowestLatency)
-├── Device Control (direct, no server needed)
-│   ├── MatterDeviceProvider (Android Matter API)
-│   ├── SwitchBotDeviceProvider (Cloud API + BLE)
-│   ├── MqttDeviceProvider (Shelly / Tasmota)
-│   ├── HomeAssistantDeviceProvider (optional)
-│   └── DeviceToolExecutor (LLM function calling)
-├── Local Context
-│   ├── Room database (sessions, messages)
-│   ├── Device cache (30s refresh)
-│   └── Conversation history trimming
-└── Discovery
-    └── mDNS (HA + OpenClaw)
-```
 
-## Tech Stack
+## 技術スタック
 
-| Component | Technology |
-|-----------|-----------|
-| Language | Kotlin 2.1.0 |
+| 項目 | 技術 |
+|------|------|
+| 言語 | Kotlin 2.1.0 |
 | UI | Jetpack Compose + Material 3 |
-| DI | Hilt |
-| Network | OkHttp 4.12.0 (REST, SSE, WebSocket) |
-| JSON | Moshi |
-| Database | Room 2.6.1 |
-| Preferences | DataStore + EncryptedSharedPreferences |
-| Voice | Vosk (wake word), Android STT/TTS |
-| Build | Gradle 8.11.1, AGP 8.7.3 |
+| AI推論 | MediaPipe LLM Inference（オンデバイス） |
+| 音声 | Vosk（ウェイクワード）、Android STT/TTS |
+| デバイス制御 | Matter、SwitchBot API、MQTT |
+| セキュリティ | AES256-GCM 暗号化（トークン保存） |
 | Min SDK | 28 (Android 9) |
-| Target SDK | 35 |
 
-## Building
-
-Requirements:
-- JDK 17
-- Android SDK Platform 35
-
-```bash
-./gradlew assembleDebug
-```
-
-Run tests:
-```bash
-./gradlew test
-```
-
-## Configuration
-
-Launch the app and go to **Settings** to configure:
-
-1. **Home Assistant** - Base URL and Long-Lived Access Token
-2. **OpenClaw** - Gateway URL
-3. **Local LLM** - OpenAI-compatible endpoint URL and model name
-
-The app auto-discovers Home Assistant and OpenClaw instances on the local network via mDNS.
-
-## Project Structure
+## アーキテクチャ
 
 ```
-app/src/main/java/com/opensmarthome/speaker/
-├── assistant/          # Provider abstraction, router, session
-│   ├── model/          # AssistantMessage, Session, ConversationState
-│   ├── provider/       # AssistantProvider interface + implementations
-│   │   ├── openclaw/   # OpenClaw WebSocket provider
-│   │   └── openai/     # OpenAI-compatible REST provider
-│   ├── router/         # ConversationRouter + RoutingPolicy
-│   └── session/        # SessionManager, ConversationHistoryManager
-├── homeassistant/      # HA client, entity cache, tool schemas
-│   ├── client/         # REST + WebSocket clients
-│   ├── model/          # Entity, Area, ServiceCall
-│   ├── cache/          # EntityCache with periodic refresh
-│   └── tool/           # ToolExecutor for LLM function calling
-├── voice/              # Voice pipeline
-│   ├── wakeword/       # WakeWordDetector + Vosk implementation
-│   ├── stt/            # SpeechToText abstraction
-│   ├── tts/            # TextToSpeech abstraction
-│   └── pipeline/       # VoicePipeline orchestrator (7-state)
-├── ui/                 # Compose UI
-│   ├── chat/           # Chat screen + ViewModel
-│   ├── dashboard/      # Dashboard + EntityCards
-│   ├── ambient/        # Ambient clock + weather
-│   ├── settings/       # Settings screen
-│   ├── navigation/     # App navigation
-│   ├── common/         # ModeScaffold, StatusBar
-│   └── theme/          # Material 3 theme
-├── service/            # Foreground service for always-on voice
-├── data/               # Room database + DataStore preferences
-├── discovery/          # mDNS service discovery
-└── di/                 # Hilt modules
+open-smart-speaker
+├── 音声パイプライン
+│   ├── ウェイクワード検出 (Vosk)
+│   ├── 音声→テキスト (Android STT)
+│   ├── AI 推論 (MediaPipe / OpenClaw / 外部LLM)
+│   ├── デバイス操作 (DeviceToolExecutor)
+│   └── テキスト→音声 (Android TTS)
+├── デバイス制御
+│   ├── SwitchBot (REST API + BLE)
+│   ├── Matter (Android Matter API)
+│   ├── MQTT (Paho クライアント)
+│   └── Home Assistant (任意)
+├── UI
+│   ├── Chat / Dashboard / Ambient / Settings
+│   └── タブレット最適化 + 常時画面ON
+└── データ
+    ├── Room DB (会話履歴)
+    ├── 暗号化設定 (トークン)
+    └── mDNS 自動検出
 ```
 
-## Design Decisions
-
-- **Provider name is `OpenAiCompatibleProvider`**, not `LocalLlmProvider` - supports both local and cloud OpenAI-compatible endpoints
-- **Home Assistant is a ToolExecutor**, not a conversation brain - the conversation agent lives in OpenClaw or the local LLM
-- **Local LLM via OpenAI-compatible endpoint** (not embedded) - works with MLC LLM, llama.cpp, Ollama, vLLM
-- **OpenClaw is special but doesn't shape the shared abstraction** - both providers implement the same `AssistantProvider` interface
-- **Tokens stored with AES256-GCM encryption** via EncryptedSharedPreferences
-- **Tool-call loop capped at 10 rounds** to prevent infinite loops
-
-## License
+## ライセンス
 
 MIT
