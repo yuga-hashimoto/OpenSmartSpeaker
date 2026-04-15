@@ -28,6 +28,7 @@ class EmbeddedLlmProvider(
     )
 
     private val bridge = LlamaCppBridge()
+    private val promptBuilder = SystemPromptBuilder()
 
     override suspend fun startSession(config: Map<String, String>): AssistantSession {
         if (!bridge.isModelLoaded()) {
@@ -84,17 +85,12 @@ class EmbeddedLlmProvider(
     }
 
     private fun buildPrompt(messages: List<AssistantMessage>, tools: List<ToolSchema>): String {
-        val sb = StringBuilder()
-
-        // Keep prompt minimal for fast inference
-        // Only include the last user message for speed
-        val lastUserMsg = messages.lastOrNull { it is AssistantMessage.User } as? AssistantMessage.User
-
-        if (lastUserMsg != null) {
-            sb.append("<start_of_turn>user\n${lastUserMsg.content}<end_of_turn>\n")
-        }
-        sb.append("<start_of_turn>model\n")
-        return sb.toString()
+        return promptBuilder.build(
+            systemPrompt = config.systemPrompt,
+            messages = messages,
+            tools = tools,
+            maxPromptChars = config.contextSize * 3 // rough chars-per-token estimate
+        )
     }
 
     private fun parseResponse(response: String): AssistantMessage {

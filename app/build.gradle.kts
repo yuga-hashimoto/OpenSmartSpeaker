@@ -18,6 +18,20 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DANDROID_ARM_NEON=TRUE",
+                    "-DCMAKE_C_FLAGS=-march=armv8.2-a+fp16+dotprod",
+                    "-DCMAKE_CXX_FLAGS=-march=armv8.2-a+fp16+dotprod"
+                )
+            }
+        }
     }
 
     buildTypes {
