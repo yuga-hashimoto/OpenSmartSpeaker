@@ -54,10 +54,18 @@ fun SettingsScreen(
         ) {
             if (onBack != null) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
-            Text("Settings", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                "Settings",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
 
