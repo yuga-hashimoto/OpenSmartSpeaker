@@ -31,11 +31,11 @@ AndroidタブレットをOpenClaw相当のAIエージェント + スマートス
 ### Phase 1: Agent Foundation (Current Priority)
 Make the local LLM a proper agent with multi-step reasoning.
 
-- [ ] P1.1: System prompt with persona and tool instructions
-- [ ] P1.2: Full conversation history in prompt (with context window management)
-- [ ] P1.3: Agent loop — LLM can call tools and continue reasoning
+- [x] P1.1: System prompt with persona and tool instructions
+- [x] P1.2: Full conversation history in prompt (with context window management)
+- [x] P1.3: Agent loop — LLM can call tools and continue reasoning
 - [ ] P1.4: Chat template system (support multiple model formats)
-- [ ] P1.5: Tool call parsing improvements (structured JSON output)
+- [x] P1.5: Tool call parsing improvements (structured JSON output)
 
 ### Phase 2: Android System Tools
 Give the agent Android-native capabilities.
