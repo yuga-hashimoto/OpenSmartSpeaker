@@ -10,13 +10,19 @@ import com.opensmarthome.speaker.device.provider.mqtt.MqttDeviceProvider
 import com.opensmarthome.speaker.device.provider.switchbot.SwitchBotApiClient
 import com.opensmarthome.speaker.device.provider.switchbot.SwitchBotConfig
 import com.opensmarthome.speaker.device.provider.switchbot.SwitchBotDeviceProvider
+import android.content.Context
 import com.opensmarthome.speaker.device.tool.DeviceToolExecutor
 import com.opensmarthome.speaker.homeassistant.client.HomeAssistantClient
+import com.opensmarthome.speaker.tool.CompositeToolExecutor
 import com.opensmarthome.speaker.tool.ToolExecutor
+import com.opensmarthome.speaker.tool.system.AndroidTimerManager
+import com.opensmarthome.speaker.tool.system.AndroidVolumeManager
+import com.opensmarthome.speaker.tool.system.SystemToolExecutor
 import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import okhttp3.OkHttpClient
@@ -60,6 +66,15 @@ object DeviceModule {
     @Singleton
     fun provideToolExecutor(
         deviceManager: DeviceManager,
-        moshi: Moshi
-    ): ToolExecutor = DeviceToolExecutor(deviceManager, moshi)
+        moshi: Moshi,
+        @ApplicationContext context: Context
+    ): ToolExecutor = CompositeToolExecutor(
+        listOf(
+            DeviceToolExecutor(deviceManager, moshi),
+            SystemToolExecutor(
+                AndroidTimerManager(context),
+                AndroidVolumeManager(context)
+            )
+        )
+    )
 }
