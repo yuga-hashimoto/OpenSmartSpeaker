@@ -35,8 +35,9 @@ data class NowPlayingInfo(
 fun NowPlayingBar(nowPlaying: NowPlayingInfo, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = SpeakerSurfaceElevated
+        shape = RoundedCornerShape(20.dp),
+        color = SpeakerSurfaceElevated.copy(alpha = 0.85f),
+        tonalElevation = 8.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

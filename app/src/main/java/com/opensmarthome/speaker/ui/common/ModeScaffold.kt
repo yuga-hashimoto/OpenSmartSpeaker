@@ -43,7 +43,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opensmarthome.speaker.ui.devices.DevicesScreen
+import com.opensmarthome.speaker.ui.home.ConnectionBadge
+import com.opensmarthome.speaker.ui.home.ConnectionStatus
 import com.opensmarthome.speaker.ui.home.HomeScreen
+import com.opensmarthome.speaker.ui.home.NightClockOverlay
 import com.opensmarthome.speaker.ui.settings.SettingsScreen
 import com.opensmarthome.speaker.ui.theme.SpeakerBackground
 import com.opensmarthome.speaker.ui.theme.SpeakerOnPrimary
@@ -62,6 +65,8 @@ fun ModeScaffold(
     val voiceState by viewModel.voiceState.collectAsState()
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
     var showSettings by remember { mutableStateOf(false) }
+    var showNightClock by remember { mutableStateOf(false) }
+    var showControlDrawer by remember { mutableStateOf(false) }
     val showOverlay = voiceState !is VoicePipelineState.Idle &&
             voiceState !is VoicePipelineState.WakeWordListening
 
@@ -104,6 +109,16 @@ fun ModeScaffold(
             }
         }
 
+        // Connection badge (top-left)
+        ConnectionBadge(
+            status = ConnectionStatus.CONNECTED,
+            providerCount = 0,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 16.dp, top = 16.dp)
+                .alpha(0.7f)
+        )
+
         // Settings gear icon (top-right)
         IconButton(
             onClick = { showSettings = true },
@@ -119,6 +134,16 @@ fun ModeScaffold(
                 modifier = Modifier.size(24.dp)
             )
         }
+
+        // Control drawer (swipe down from top)
+        ControlDrawer(
+            visible = showControlDrawer,
+            onNightMode = {
+                showControlDrawer = false
+                showNightClock = true
+            },
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
 
         // Mic FAB (bottom center)
         MicFab(
@@ -145,6 +170,11 @@ fun ModeScaffold(
             exit = fadeOut(tween(300)) + slideOutVertically(tween(300)) { it }
         ) {
             SettingsScreen(onBack = { showSettings = false })
+        }
+
+        // Night clock overlay
+        if (showNightClock) {
+            NightClockOverlay(onDismiss = { showNightClock = false })
         }
     }
 }
