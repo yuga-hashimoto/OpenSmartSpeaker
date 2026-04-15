@@ -5,9 +5,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.opensmarthome.speaker.ui.ambient.AmbientScreen
-import com.opensmarthome.speaker.ui.chat.ChatScreen
-import com.opensmarthome.speaker.ui.dashboard.DashboardScreen
 import com.opensmarthome.speaker.ui.settings.SettingsScreen
 
 @Composable
@@ -17,20 +14,11 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = AppRoute.Chat.route,
+        startDestination = AppRoute.Settings.route,
         modifier = modifier
     ) {
-        composable(AppRoute.Chat.route) {
-            ChatScreen()
-        }
-        composable(AppRoute.Dashboard.route) {
-            DashboardScreen()
-        }
-        composable(AppRoute.Ambient.route) {
-            AmbientScreen()
-        }
         composable(AppRoute.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

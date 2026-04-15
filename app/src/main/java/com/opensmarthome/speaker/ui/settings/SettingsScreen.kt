@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun SettingsScreen(
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {

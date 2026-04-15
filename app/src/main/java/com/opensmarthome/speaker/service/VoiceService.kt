@@ -59,25 +59,37 @@ class VoiceService : Service() {
     }
 
     private suspend fun initializeWakeWord() {
-        val downloader = VoskModelDownloader(this)
-        if (!downloader.isModelDownloaded()) {
-            Timber.d("Vosk model not found, downloading...")
-            downloader.downloadModel()
+        try {
+            // Check if Vosk library is available
+            Class.forName("org.vosk.Model")
+        } catch (e: ClassNotFoundException) {
+            Timber.w("Vosk library not available, wake word disabled. Add vosk-android dependency to enable.")
+            return
         }
 
-        if (downloader.isModelDownloaded()) {
-            val savedWakeWord = preferences.observe(PreferenceKeys.WAKE_WORD).first() ?: "hey speaker"
-            val config = WakeWordConfig(keyword = savedWakeWord)
-            wakeWordDetector = VoskWakeWordDetector(config, downloader.getModelDir())
-            wakeWordDetector?.start {
-                Timber.d("Wake word detected! Starting voice pipeline...")
-                scope.launch {
-                    voicePipeline.startListening()
-                }
+        try {
+            val downloader = VoskModelDownloader(this)
+            if (!downloader.isModelDownloaded()) {
+                Timber.d("Vosk model not found, downloading...")
+                downloader.downloadModel()
             }
-            Timber.d("Wake word detection active")
-        } else {
-            Timber.w("Vosk model unavailable, wake word disabled")
+
+            if (downloader.isModelDownloaded()) {
+                val savedWakeWord = preferences.observe(PreferenceKeys.WAKE_WORD).first() ?: "hey speaker"
+                val config = WakeWordConfig(keyword = savedWakeWord)
+                wakeWordDetector = VoskWakeWordDetector(config, downloader.getModelDir())
+                wakeWordDetector?.start {
+                    Timber.d("Wake word detected! Starting voice pipeline...")
+                    scope.launch {
+                        voicePipeline.startListening()
+                    }
+                }
+                Timber.d("Wake word detection active")
+            } else {
+                Timber.w("Vosk model unavailable, wake word disabled")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize wake word, continuing without it")
         }
     }
 
