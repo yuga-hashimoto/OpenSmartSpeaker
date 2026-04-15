@@ -23,11 +23,14 @@ sealed class ModelDownloadState {
 class ModelDownloader(private val context: Context) {
 
     companion object {
-        // Gemma 2B IT (instruction-tuned) for MediaPipe - smallest viable model
+        // Gemma 4 E2B IT GGUF (Q4_K_M quantization) from unsloth on HuggingFace
+        // Public repo, no authentication required
+        private const val MODEL_REPO = "unsloth/gemma-4-E2B-it-GGUF"
+        private const val MODEL_FILE = "gemma-4-E2B-it-Q4_K_M.gguf"
         private const val MODEL_URL =
-            "https://storage.googleapis.com/mediapipe-models/llm_inference/gemma3-1b-it-int4/float32/latest/gemma3-1b-it-int4.task"
-        private const val MODEL_FILENAME = "gemma3-1b-it-int4.task"
-        private const val MIN_STORAGE_MB = 2000L // 2GB minimum free space
+            "https://huggingface.co/$MODEL_REPO/resolve/main/$MODEL_FILE"
+        private const val MODEL_FILENAME = "gemma-4-e2b.gguf"
+        private const val MIN_STORAGE_MB = 2000L
     }
 
     private val _state = MutableStateFlow<ModelDownloadState>(ModelDownloadState.NotStarted)
@@ -42,7 +45,10 @@ class ModelDownloader(private val context: Context) {
 
     fun getModelPath(): String? {
         val modelFile = File(modelsDir, MODEL_FILENAME)
-        return if (modelFile.exists() && modelFile.length() > 1024) modelFile.absolutePath else null
+        if (modelFile.exists() && modelFile.length() > 1024) return modelFile.absolutePath
+        // Also check for any .gguf file
+        val anyGguf = modelsDir.listFiles()?.firstOrNull { it.extension == "gguf" && it.length() > 1024 }
+        return anyGguf?.absolutePath
     }
 
     fun isModelDownloaded(): Boolean = getModelPath() != null
@@ -76,22 +82,28 @@ class ModelDownloader(private val context: Context) {
             val url = URL(MODEL_URL)
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 30000
-            connection.readTimeout = 30000
+            connection.readTimeout = 60000
             connection.requestMethod = "GET"
+            connection.setRequestProperty("User-Agent", "open-smart-speaker/1.0")
+
+            // Follow redirects (HuggingFace uses redirects to CDN)
+            connection.instanceFollowRedirects = true
 
             val responseCode = connection.responseCode
             if (responseCode != HttpURLConnection.HTTP_OK) {
+                val errorBody = connection.errorStream?.bufferedReader()?.readText() ?: ""
+                Timber.e("Download failed: HTTP $responseCode - $errorBody")
                 _state.value = ModelDownloadState.Error("Download failed: HTTP $responseCode")
                 return@withContext
             }
 
             val totalBytes = connection.contentLengthLong
-            val totalMb = (totalBytes / 1_048_576).toInt()
+            val totalMb = if (totalBytes > 0) (totalBytes / 1_048_576).toInt() else 0
             var downloadedBytes = 0L
 
             connection.inputStream.use { input ->
                 FileOutputStream(tempFile).use { output ->
-                    val buffer = ByteArray(8192)
+                    val buffer = ByteArray(65536) // 64KB buffer for faster download
                     var bytesRead: Int
                     while (input.read(buffer).also { bytesRead = it } != -1) {
                         output.write(buffer, 0, bytesRead)
@@ -103,7 +115,6 @@ class ModelDownloader(private val context: Context) {
                 }
             }
 
-            // Rename temp file to final
             if (tempFile.renameTo(targetFile)) {
                 Timber.d("Model downloaded: ${targetFile.absolutePath} (${targetFile.length() / 1_048_576}MB)")
                 _state.value = ModelDownloadState.Ready
@@ -123,8 +134,7 @@ class ModelDownloader(private val context: Context) {
     }
 
     fun deleteModel() {
-        File(modelsDir, MODEL_FILENAME).delete()
-        File(modelsDir, "$MODEL_FILENAME.downloading").delete()
+        modelsDir.listFiles()?.forEach { it.delete() }
         _state.value = ModelDownloadState.NotStarted
     }
 }

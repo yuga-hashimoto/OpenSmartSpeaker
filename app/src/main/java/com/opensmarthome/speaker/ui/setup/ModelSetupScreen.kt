@@ -94,7 +94,7 @@ fun ModelSetupScreen(
             when (val s = state) {
                 is ModelDownloadState.Downloading -> {
                     Text(
-                        text = "Gemma 3 1B — ${s.downloadedMb}MB / ${s.totalMb}MB",
+                        text = "Gemma 4 E2B — ${s.downloadedMb}MB / ${if (s.totalMb > 0) "${s.totalMb}MB" else "..."}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = SpeakerTextSecondary
                     )
