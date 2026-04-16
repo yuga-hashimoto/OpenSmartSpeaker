@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -76,6 +77,7 @@ fun SkillsScreen(
                     loaded = current,
                     onInstall = { url -> viewModel.installFromUrl(url) },
                     onDelete = { name -> viewModel.delete(name) },
+                    onToggleEnabled = { name, enabled -> viewModel.setEnabled(name, enabled) },
                     padding = padding
                 )
         }
@@ -98,6 +100,7 @@ private fun LoadedContent(
     loaded: SkillsViewModel.UiState.Loaded,
     onInstall: (String) -> Unit,
     onDelete: (String) -> Unit,
+    onToggleEnabled: (String, Boolean) -> Unit,
     padding: PaddingValues
 ) {
     var urlInput by remember { mutableStateOf("") }
@@ -126,7 +129,11 @@ private fun LoadedContent(
             )
         }
         items(loaded.skills, key = { it.name }) { skill ->
-            SkillRow(skill = skill, onDelete = { onDelete(skill.name) })
+            SkillRow(
+                skill = skill,
+                onDelete = { onDelete(skill.name) },
+                onToggleEnabled = { enabled -> onToggleEnabled(skill.name, enabled) }
+            )
         }
     }
 }
@@ -180,11 +187,25 @@ private fun InstallFromUrlCard(
 @Composable
 private fun SkillRow(
     skill: SkillRepository.SkillView,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onToggleEnabled: (Boolean) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = skill.name, style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = skill.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = skill.enabled,
+                    onCheckedChange = onToggleEnabled
+                )
+            }
             Spacer(Modifier.size(4.dp))
             Text(
                 text = skill.description,
