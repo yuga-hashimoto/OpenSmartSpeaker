@@ -58,4 +58,65 @@ class SkillRepositoryTest {
     fun `delete unknown returns false`() {
         assertThat(repo.delete("nope")).isFalse()
     }
+
+    @Test
+    fun `setEnabled toggles registry enabled state`() {
+        registry.register(Skill("alpha", "d", "body", source = "asset:skills/alpha/SKILL.md"))
+        assertThat(registry.isEnabled("alpha")).isTrue()
+
+        repo.setEnabled("alpha", false)
+
+        assertThat(registry.isEnabled("alpha")).isFalse()
+        assertThat(repo.listAll().single().enabled).isFalse()
+
+        repo.setEnabled("alpha", true)
+        assertThat(repo.listAll().single().enabled).isTrue()
+    }
+
+    @Test
+    fun `setEnabled is silent for unknown skill`() {
+        repo.setEnabled("ghost", false)
+        // Must not throw and must not register a phantom skill.
+        assertThat(repo.listAll()).isEmpty()
+    }
+
+    @Test
+    fun `reloadFromDisk picks up newly added skill files`() {
+        // Start empty.
+        assertThat(repo.listAll()).isEmpty()
+
+        // Side-load a skill bundle while the app is "running".
+        val skillDir = File(userDir, "side-loaded").apply { mkdirs() }
+        File(skillDir, "SKILL.md").writeText(
+            """
+            ---
+            name: side-loaded
+            description: Added by user via file manager.
+            ---
+            # Side-loaded
+            """.trimIndent()
+        )
+
+        repo.reloadFromDisk()
+
+        val views = repo.listAll()
+        assertThat(views.map { it.name }).contains("side-loaded")
+        // Loaded from userSkillsDir → must be deletable.
+        val view = views.single { it.name == "side-loaded" }
+        assertThat(view.deletable).isTrue()
+    }
+
+    @Test
+    fun `delete removes user skill directory and registry entry`() {
+        val skillDir = File(userDir, "wipe-me").apply { mkdirs() }
+        File(skillDir, "SKILL.md").writeText("test")
+        registry.register(Skill(
+            "wipe-me", "desc", "body",
+            source = "file:${skillDir.absolutePath}/SKILL.md"
+        ))
+
+        assertThat(repo.delete("wipe-me")).isTrue()
+        assertThat(skillDir.exists()).isFalse()
+        assertThat(registry.get("wipe-me")).isNull()
+    }
 }
