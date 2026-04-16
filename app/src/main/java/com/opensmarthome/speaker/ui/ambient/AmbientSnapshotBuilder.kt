@@ -39,6 +39,10 @@ class AmbientSnapshotBuilder(
                 )
             }
 
+        // Soonest-finishing timer surfaces as a single line so the user
+        // sees what's next without opening the Timer app.
+        val nextTimer = timers.minByOrNull { it.remainingSeconds }
+
         return AmbientSnapshot(
             nowMs = clock(),
             temperatureC = tempC,
@@ -46,6 +50,8 @@ class AmbientSnapshotBuilder(
             weatherCondition = condition,
             activeNotificationCount = notifications.size,
             activeTimerCount = timers.size,
+            nextTimerLabel = nextTimer?.label?.takeIf { it.isNotBlank() },
+            nextTimerRemainingSeconds = nextTimer?.remainingSeconds,
             recentDeviceActivity = deviceActivity
         )
     }

@@ -20,6 +20,8 @@ data class AmbientSnapshot(
     val activeNotificationCount: Int = 0,
     val unreadTaskCount: Int = 0,
     val activeTimerCount: Int = 0,
+    val nextTimerLabel: String? = null,
+    val nextTimerRemainingSeconds: Int? = null,
     val recentDeviceActivity: List<DeviceLine> = emptyList(),
     val upcomingCalendarEvents: List<String> = emptyList()
 ) {
