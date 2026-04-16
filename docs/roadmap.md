@@ -82,7 +82,7 @@ Close remaining gaps vs. OpenClaw Android node.
 - [x] P6.4: Photos latest (OpenClaw photos.latest via MediaStore)
 - [x] P6.5: Battery / device.health tool (OpenClaw device.health)
 - [x] P6.6: Routine persistence (Room-backed RoutineStore)
-- [ ] P6.7: Vector-based memory search (local embeddings)
+- [x] P6.7: Semantic memory search (TF-IDF cosine similarity, zero-dep lightweight alternative to embeddings)
 - [ ] P6.8: RAG / document ingest (user files → memory)
 - [ ] P6.9: Vision support via multimodal LLM
 - [x] P6.10: Skill install from URL (FileSystemSkillLoader + SkillInstaller + install_skill_from_url tool)
