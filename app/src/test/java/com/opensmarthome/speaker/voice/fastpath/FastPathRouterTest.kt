@@ -747,6 +747,41 @@ class FastPathRouterTest {
     }
 
     @Test
+    fun `tv on fast-path`() {
+        val m = router.match("TV on")
+        assertThat(m?.arguments?.get("device_type")).isEqualTo("media_player")
+        assertThat(m?.arguments?.get("action")).isEqualTo("turn_on")
+    }
+
+    @Test
+    fun `turn the tv off`() {
+        val m = router.match("turn the TV off")
+        assertThat(m?.arguments?.get("device_type")).isEqualTo("media_player")
+        assertThat(m?.arguments?.get("action")).isEqualTo("turn_off")
+    }
+
+    @Test
+    fun `television long form`() {
+        val m = router.match("turn the television on")
+        assertThat(m?.arguments?.get("device_type")).isEqualTo("media_player")
+        assertThat(m?.arguments?.get("action")).isEqualTo("turn_on")
+    }
+
+    @Test
+    fun `japanese tv on`() {
+        val m = router.match("テレビをつけて")
+        assertThat(m?.arguments?.get("device_type")).isEqualTo("media_player")
+        assertThat(m?.arguments?.get("action")).isEqualTo("turn_on")
+    }
+
+    @Test
+    fun `japanese tv off`() {
+        val m = router.match("テレビを消して")
+        assertThat(m?.arguments?.get("device_type")).isEqualTo("media_player")
+        assertThat(m?.arguments?.get("action")).isEqualTo("turn_off")
+    }
+
+    @Test
     fun `open the blinds fast-path`() {
         val m = router.match("open the blinds")
         assertThat(m?.toolName).isEqualTo("execute_command")
@@ -777,7 +812,6 @@ class FastPathRouterTest {
 
     @Test
     fun `open the camera still goes to launch_app`() {
-        // Precedence: "open the camera" is an app, not a cover.
         val m = router.match("open the camera")
         assertThat(m?.toolName).isEqualTo("launch_app")
     }
