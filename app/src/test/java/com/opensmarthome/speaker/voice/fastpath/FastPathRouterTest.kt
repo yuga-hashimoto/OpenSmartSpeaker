@@ -260,6 +260,44 @@ class FastPathRouterTest {
     }
 
     @Test
+    fun `open the door is not launched as an app`() {
+        // Smart-home controllable — must fall through to the LLM, not become launch_app("door").
+        val m = router.match("open the door")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
+    fun `open the garage is not launched as an app`() {
+        val m = router.match("open the garage")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
+    fun `open the blinds is not launched as an app`() {
+        val m = router.match("open the blinds")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
+    fun `lock the door is not launched as an app`() {
+        // 'lock' alias also reserved.
+        val m = router.match("open the lock")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
+    fun `japanese open door is not launched as an app`() {
+        val m = router.match("ドアを開いて")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
+    fun `japanese open curtains is not launched as an app`() {
+        val m = router.match("カーテンを開いて")
+        assertThat(m?.toolName).isNotEqualTo("launch_app")
+    }
+
+    @Test
     fun `turn off everything`() {
         val m = router.match("turn off everything")
         assertThat(m?.toolName).isEqualTo("execute_command")

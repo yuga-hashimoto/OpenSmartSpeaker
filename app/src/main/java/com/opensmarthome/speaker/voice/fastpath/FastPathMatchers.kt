@@ -352,11 +352,36 @@ object LaunchAppMatcher : FastPathMatcher {
     private val englishRegex = Regex("""(?:open|launch|start|run)\s+(?:the\s+)?(.+?)(?:\s+app)?\s*[!?.]*\s*$""")
     private val japaneseRegex = Regex("""(.+?)\s*(?:を)?\s*(?:開いて|立ち上げて|起動して)""")
 
+    /**
+     * Names that should never be interpreted as apps even if they match the
+     * "open/launch/start X" pattern. These are smart-home controllables
+     * (doors, blinds, locks, thermostats…) that the LLM can route to
+     * execute_command, plus timer/light keywords that their own matchers
+     * already own.
+     */
+    private val smartHomeReservedPrefixes = listOf(
+        "light", "timer",
+        "door", "garage", "gate",
+        "blind", "curtain", "shade", "window",
+        "lock", "unlock",
+        "thermostat", "ac", "air conditioner",
+        "fan", "tv", "television",
+        "speaker", "music", "playlist",
+        "oven", "microwave"
+    )
+    private val japaneseReservedSubstrings = listOf(
+        "ドア", "扉", "玄関",
+        "カーテン", "ブラインド", "シャッター", "窓",
+        "鍵", "ロック",
+        "エアコン", "扇風機",
+        "テレビ", "音楽"
+    )
+
     override fun tryMatch(normalized: String): FastPathMatch? {
         englishRegex.matchEntire(normalized.trim())?.let {
             val name = it.groupValues[1].trim()
             if (name.isEmpty()) return null
-            if (name.startsWith("light") || name.startsWith("timer")) return null
+            if (smartHomeReservedPrefixes.any { keyword -> name.startsWith(keyword) }) return null
             return FastPathMatch(
                 toolName = "launch_app",
                 arguments = mapOf("app_name" to name),
@@ -366,6 +391,7 @@ object LaunchAppMatcher : FastPathMatcher {
         japaneseRegex.matchEntire(normalized.trim())?.let {
             val name = it.groupValues[1].trim().removeSuffix("アプリ").trim()
             if (name.isEmpty()) return null
+            if (japaneseReservedSubstrings.any { keyword -> name.contains(keyword) }) return null
             return FastPathMatch(
                 toolName = "launch_app",
                 arguments = mapOf("app_name" to name),
