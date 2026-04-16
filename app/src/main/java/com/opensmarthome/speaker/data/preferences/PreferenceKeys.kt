@@ -73,4 +73,7 @@ object PreferenceKeys {
 
     // Resume last session (restore conversation history from Room on launch)
     val RESUME_LAST_SESSION = booleanPreferencesKey("resume_last_session")
+
+    // Agent customization
+    val CUSTOM_SYSTEM_PROMPT = stringPreferencesKey("custom_system_prompt")
 }

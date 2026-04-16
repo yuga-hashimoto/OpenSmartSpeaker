@@ -53,14 +53,22 @@ class ProviderManager @Inject constructor(
             val models = modelManager.listAvailableModels()
             if (models.isNotEmpty()) {
                 val modelPath = models.first().path
+                // User-customized system prompt overrides the default when set
+                val customPrompt = preferences.observe(PreferenceKeys.CUSTOM_SYSTEM_PROMPT).first()
+                val baseConfig = EmbeddedLlmConfig(modelPath = modelPath)
+                val config = if (!customPrompt.isNullOrBlank()) {
+                    baseConfig.copy(systemPrompt = customPrompt)
+                } else {
+                    baseConfig
+                }
                 val provider = EmbeddedLlmProvider(
                     context = context,
-                    config = EmbeddedLlmConfig(modelPath = modelPath),
+                    config = config,
                     skillRegistry = skillRegistry,
                     deviceManager = deviceManager
                 )
                 router.registerProvider(provider)
-                Timber.d("Registered EmbeddedLlmProvider with model: ${models.first().name}")
+                Timber.d("Registered EmbeddedLlmProvider with model: ${models.first().name} (custom prompt: ${!customPrompt.isNullOrBlank()})")
             } else {
                 Timber.d("No models found, EmbeddedLlmProvider not registered")
             }
