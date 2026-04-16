@@ -21,12 +21,14 @@ analytics per call.
 |---|---|---|
 | `set_timer` | SystemToolExecutor | `{ seconds, label? }` |
 | `cancel_timer` | SystemToolExecutor | `{ timer_id }` |
-| `list_timers` | SystemToolExecutor | |
+| `cancel_all_timers` | SystemToolExecutor | |
+| `get_timers` | SystemToolExecutor | List active timers (used by ListTimersMatcher fast-path) |
 | `set_volume` | SystemToolExecutor | `{ level: 0..100 }` |
-| `adjust_volume` | SystemToolExecutor | `{ delta }` |
 | `get_volume` | SystemToolExecutor | |
-| `launch_app` | SystemToolExecutor | `{ package_or_name }` |
+| `launch_app` | SystemToolExecutor | `{ app_name }` (resolved against installed apps) |
+| `list_apps` | SystemToolExecutor | Installed launcher apps |
 | `get_datetime` | SystemToolExecutor | Resolves `now` / `today` |
+| `find_device` | FindDeviceTool | Rings + vibrates 10s — needs VIBRATE |
 | `get_device_health` | DeviceHealthToolExecutor | battery / storage / memory |
 
 ## Information
@@ -62,6 +64,7 @@ analytics per call.
 |---|---|---|
 | `remember` / `recall` / `forget` | MemoryToolExecutor | Room + TF-IDF index |
 | `search_memory` / `semantic_memory_search` | MemoryToolExecutor | Keyword / similarity |
+| `list_memory` | MemoryToolExecutor | Returns the full memory store |
 
 ## RAG
 
@@ -83,3 +86,16 @@ analytics per call.
 |---|---|---|
 | `get_skill` / `list_skills` | SkillToolExecutor | |
 | `install_skill_from_url` | SkillInstaller | Downloads + validates SKILL.md |
+
+## Composite tools
+
+These tools chain several other tools in one call. The agent (and the
+fast-path) can invoke them by name; the user perceives one action.
+
+| Tool | Source | Notes |
+|---|---|---|
+| `morning_briefing` | MorningBriefingTool | weather + news + today's calendar |
+| `evening_briefing` | EveningBriefingTool | notifications + tomorrow's calendar + active timers |
+| `goodnight` | GoodnightTool | lights off + media pause + cancel timers |
+| `arrive_home` | PresenceTool | lights on + volume to 50 |
+| `leave_home` | PresenceTool | lights off + media pause |
