@@ -346,7 +346,8 @@ object DeviceModule {
             // lambda to avoid a Hilt cycle.
             com.opensmarthome.speaker.tool.composite.MorningBriefingTool { delegatingExecutor },
             com.opensmarthome.speaker.tool.composite.EveningBriefingTool { delegatingExecutor },
-            com.opensmarthome.speaker.tool.composite.GoodnightTool { delegatingExecutor }
+            com.opensmarthome.speaker.tool.composite.GoodnightTool { delegatingExecutor },
+            com.opensmarthome.speaker.tool.composite.PresenceTool { delegatingExecutor }
             )
         )
         compositeHolder[0] = composite

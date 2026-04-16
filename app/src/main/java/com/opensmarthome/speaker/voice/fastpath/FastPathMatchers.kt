@@ -354,6 +354,51 @@ object FindDeviceMatcher : FastPathMatcher {
     }
 }
 
+/** "I'm home", "ただいま" → arrive_home composite */
+object ArriveHomeMatcher : FastPathMatcher {
+    private val patterns = listOf(
+        Regex("""^\s*(?:i'?m|im)\s+home\s*[!?.]*\s*$"""),
+        Regex("""^\s*(?:i'?m|im)\s+back\s*[!?.]*\s*$"""),
+        Regex("""^\s*ただいま\s*[!?.]*\s*$""")
+    )
+
+    override fun tryMatch(normalized: String): FastPathMatch? {
+        for (p in patterns) {
+            if (p.containsMatchIn(normalized)) {
+                return FastPathMatch(
+                    toolName = "arrive_home",
+                    arguments = emptyMap(),
+                    spokenConfirmation = "Welcome home."
+                )
+            }
+        }
+        return null
+    }
+}
+
+/** "leaving", "I'm leaving", "going out", "行ってきます" → leave_home composite */
+object LeaveHomeMatcher : FastPathMatcher {
+    private val patterns = listOf(
+        Regex("""^\s*(?:i'?m|im)\s+(?:leaving|going\s+out)\s*[!?.]*\s*$"""),
+        Regex("""^\s*leaving\s+(?:home|now)?\s*[!?.]*\s*$"""),
+        Regex("""^\s*行ってきます\s*[!?.]*\s*$"""),
+        Regex("""^\s*出かけます\s*[!?.]*\s*$""")
+    )
+
+    override fun tryMatch(normalized: String): FastPathMatch? {
+        for (p in patterns) {
+            if (p.containsMatchIn(normalized)) {
+                return FastPathMatch(
+                    toolName = "leave_home",
+                    arguments = emptyMap(),
+                    spokenConfirmation = "See you later."
+                )
+            }
+        }
+        return null
+    }
+}
+
 /**
  * "goodnight", "good night", "おやすみ" — composite shutdown that turns off
  * lights, pauses media, and cancels timers in one shot.

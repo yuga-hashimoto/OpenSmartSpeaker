@@ -73,6 +73,8 @@ class DefaultFastPathRouter(
             // GoodnightMatcher must precede the GreetingMatcher's "good night"
             // pleasantry rule so the destructive routine wins.
             GoodnightMatcher,
+            ArriveHomeMatcher,
+            LeaveHomeMatcher,
             // Briefing matchers must precede WeatherMatcher / NewsMatcher
             // so 'good morning briefing' / 'evening briefing' win.
             MorningBriefingMatcher,
