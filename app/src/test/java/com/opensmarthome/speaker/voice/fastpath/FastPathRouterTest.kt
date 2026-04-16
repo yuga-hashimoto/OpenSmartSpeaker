@@ -651,4 +651,62 @@ class FastPathRouterTest {
         assertThat(m?.toolName).isEqualTo("launch_app")
         assertThat(m?.arguments?.get("app_name")).isEqualTo("chrome")
     }
+
+    @Test
+    fun `morning briefing fires and speaks confirmation`() {
+        val m = router.match("morning briefing")
+        assertThat(m?.toolName).isEqualTo("morning_briefing")
+        assertThat(m?.spokenConfirmation?.lowercase()).contains("morning")
+    }
+
+    @Test
+    fun `good morning briefing also fires`() {
+        val m = router.match("good morning briefing")
+        assertThat(m?.toolName).isEqualTo("morning_briefing")
+    }
+
+    @Test
+    fun `morning summary fires the composite`() {
+        val m = router.match("morning summary")
+        assertThat(m?.toolName).isEqualTo("morning_briefing")
+    }
+
+    @Test
+    fun `japanese morning briefing`() {
+        val m = router.match("朝のサマリー")
+        assertThat(m?.toolName).isEqualTo("morning_briefing")
+    }
+
+    @Test
+    fun `evening briefing fires and speaks confirmation`() {
+        val m = router.match("evening briefing")
+        assertThat(m?.toolName).isEqualTo("evening_briefing")
+        assertThat(m?.spokenConfirmation?.lowercase()).contains("evening")
+    }
+
+    @Test
+    fun `wind down fires evening briefing`() {
+        val m = router.match("wind down")
+        assertThat(m?.toolName).isEqualTo("evening_briefing")
+    }
+
+    @Test
+    fun `japanese evening briefing`() {
+        val m = router.match("夜のサマリー")
+        assertThat(m?.toolName).isEqualTo("evening_briefing")
+    }
+
+    @Test
+    fun `morning briefing precedes weather`() {
+        // "morning briefing" must NOT route to get_weather even though the
+        // composite runs weather under the hood.
+        val m = router.match("morning briefing")
+        assertThat(m?.toolName).isNotEqualTo("get_weather")
+    }
+
+    @Test
+    fun `evening briefing precedes news`() {
+        val m = router.match("evening briefing")
+        assertThat(m?.toolName).isNotEqualTo("get_news")
+    }
 }
