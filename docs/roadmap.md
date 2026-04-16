@@ -70,7 +70,7 @@ Make it feel like Alexa/Google Home first.
 - [ ] P11.4: Unified provider switcher polish
 
 ## Phase 12 — Priority 5: Refactor / Quality
-- [ ] P12.1: Dead code sweep (VoicePipeline TTS/audio branches)
+- [x] P12.1: Dead code sweep — removed dead `is AndroidTtsProvider` branch in VoicePipeline.applyTtsLanguagePreference (TtsManager is the only injected TextToSpeech, so the direct provider branch was unreachable). Removed corresponding unused import
 - [ ] P12.2: CameraX integration (replaces skeleton)
 - [ ] P12.3: MediaProjection integration (replaces skeleton)
 - [x] P12.4: SecurePreferences audit — SWITCHBOT_TOKEN moved from plaintext DataStore to SecurePreferences (was leaking); added KEY_SWITCHBOT_TOKEN/SECRET/MQTT_PASSWORD constants; removed silent fallback to plaintext SharedPreferences on keystore failure; deleted dead plaintext secret keys (HA_TOKEN, OPENCLAW_API_KEY, SWITCHBOT_SECRET, MQTT_PASSWORD from PreferenceKeys)
