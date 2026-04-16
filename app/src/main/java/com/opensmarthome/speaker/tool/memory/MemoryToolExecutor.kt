@@ -17,7 +17,8 @@ import timber.log.Timber
  * no vector embeddings yet).
  */
 class MemoryToolExecutor(
-    private val memoryDao: MemoryDao
+    private val memoryDao: MemoryDao,
+    private val semanticSearch: SemanticMemorySearch = SemanticMemorySearch(memoryDao)
 ) : ToolExecutor {
 
     override suspend fun availableTools(): List<ToolSchema> = listOf(
@@ -50,6 +51,14 @@ class MemoryToolExecutor(
             parameters = mapOf(
                 "key" to ToolParameter("string", "The memory key to delete", required = true)
             )
+        ),
+        ToolSchema(
+            name = "semantic_memory_search",
+            description = "Find memories semantically related to a natural-language query (TF-IDF similarity). Use when the user asks 'what do you know about X' without giving an exact key.",
+            parameters = mapOf(
+                "query" to ToolParameter("string", "Natural language query", required = true),
+                "limit" to ToolParameter("number", "Max results (1-20, default 5)", required = false)
+            )
         )
     )
 
@@ -59,6 +68,7 @@ class MemoryToolExecutor(
                 "remember" -> executeRemember(call)
                 "recall" -> executeRecall(call)
                 "search_memory" -> executeSearch(call)
+                "semantic_memory_search" -> executeSemantic(call)
                 "forget" -> executeForget(call)
                 else -> ToolResult(call.id, false, "", "Unknown tool: ${call.name}")
             }
@@ -94,6 +104,16 @@ class MemoryToolExecutor(
         val limit = (call.arguments["limit"] as? Number)?.toInt()?.coerceIn(1, 20) ?: 5
 
         val results = memoryDao.search(query, limit)
+        val data = results.joinToString(",") { formatEntry(it) }
+        return ToolResult(call.id, true, "[$data]")
+    }
+
+    private suspend fun executeSemantic(call: ToolCall): ToolResult {
+        val query = call.arguments["query"] as? String
+            ?: return ToolResult(call.id, false, "", "Missing query")
+        val limit = (call.arguments["limit"] as? Number)?.toInt()?.coerceIn(1, 20) ?: 5
+
+        val results = semanticSearch.searchSemantic(query, limit)
         val data = results.joinToString(",") { formatEntry(it) }
         return ToolResult(call.id, true, "[$data]")
     }

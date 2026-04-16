@@ -23,9 +23,11 @@ class MemoryToolExecutorTest {
     }
 
     @Test
-    fun `availableTools has four memory tools`() = runTest {
+    fun `availableTools has five memory tools`() = runTest {
         val names = executor.availableTools().map { it.name }
-        assertThat(names).containsExactly("remember", "recall", "search_memory", "forget")
+        assertThat(names).containsExactly(
+            "remember", "recall", "search_memory", "forget", "semantic_memory_search"
+        )
     }
 
     @Test
