@@ -59,7 +59,7 @@ Make it feel like Alexa/Google Home first.
 - [x] P10.1: First-run permission walkthrough — OnboardingScreen + OnboardingViewModel; shows after model download before ModeScaffold when SETUP_COMPLETED=false; uses PermissionRepository rows with rationale + "Grant" deep-link; "Skip" / "Get started" both flip flag
 - [x] P10.2: Voice-controlled tour — HelpMatcher added to fast-path; "help" / "what can you do" / "できることを教えて" return a canned capability summary with zero LLM round-trip. FastPathMatch.toolName made nullable for speak-only responses
 - [x] P10.3: Offline-first error states — ErrorClassifier.ProviderKind (LOCAL/REMOTE/UNKNOWN); LOCAL provider remaps network-shaped errors to LOCAL_ENGINE, adds model-load patterns; ProviderCapabilities.isLocal propagates from EmbeddedLlmProvider; VoicePipeline passes kind based on active provider
-- [ ] P10.4: Accessibility pass (TalkBack, large-text)
+- [x] P10.4: Accessibility pass — VoiceOverlay response + state label now `liveRegion = Polite` so TalkBack announces state changes; SuggestionBubble also `liveRegion = Polite`; decorative icons already correctly pass `contentDescription = null` alongside labeled text
 - [ ] P10.5: Dark/light mode consistency
 - [x] P10.6: Music Assistant / media control UI — NowPlayingBar wired to dispatch play/pause/next/prev via DeviceManager.executeCommand; HA media_player service names (media_play/media_pause/media_next_track/media_previous_track); HomeViewModel.dispatchMediaAction; clock tick moved from ViewModel to Composable for testability; HomeViewModelTest covers action wiring
 
