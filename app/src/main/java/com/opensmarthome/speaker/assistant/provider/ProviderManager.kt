@@ -3,6 +3,7 @@ package com.opensmarthome.speaker.assistant.provider
 import android.content.Context
 import com.opensmarthome.speaker.assistant.provider.embedded.EmbeddedLlmConfig
 import com.opensmarthome.speaker.assistant.provider.embedded.EmbeddedLlmProvider
+import com.opensmarthome.speaker.assistant.provider.embedded.HardwareProfile
 import com.opensmarthome.speaker.assistant.provider.embedded.ModelManager
 import com.opensmarthome.speaker.assistant.skills.SkillRegistry
 import com.opensmarthome.speaker.device.DeviceManager
@@ -55,12 +56,16 @@ class ProviderManager @Inject constructor(
                 val modelPath = models.first().path
                 // User-customized system prompt overrides the default when set
                 val customPrompt = preferences.observe(PreferenceKeys.CUSTOM_SYSTEM_PROMPT).first()
-                val baseConfig = EmbeddedLlmConfig(modelPath = modelPath)
-                val config = if (!customPrompt.isNullOrBlank()) {
-                    baseConfig.copy(systemPrompt = customPrompt)
-                } else {
-                    baseConfig
-                }
+                val systemPrompt = customPrompt?.takeIf { it.isNotBlank() }
+                    ?: EmbeddedLlmConfig.DEFAULT_SYSTEM_PROMPT
+                // Tune context size / thread count / GPU layers to device hardware
+                val profile = HardwareProfile.fromContext(context)
+                val config = EmbeddedLlmConfig.forHardware(
+                    modelPath = modelPath,
+                    profile = profile,
+                    systemPrompt = systemPrompt
+                )
+                Timber.d("EmbeddedLlm tuned for ${profile.tier}: ctx=${config.contextSize} threads=${config.threads}")
                 val provider = EmbeddedLlmProvider(
                     context = context,
                     config = config,
