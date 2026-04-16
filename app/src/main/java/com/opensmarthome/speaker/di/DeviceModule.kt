@@ -191,6 +191,26 @@ object DeviceModule {
 
     @Provides
     @Singleton
+    fun providePermissionManager(
+        @ApplicationContext context: Context
+    ): com.opensmarthome.speaker.permission.PermissionManager =
+        com.opensmarthome.speaker.permission.PermissionManager(
+            context = context,
+            notificationListenerClass = com.opensmarthome.speaker.tool.system
+                .OpenSmartSpeakerNotificationListener::class.java,
+            accessibilityServiceClass = com.opensmarthome.speaker.tool.accessibility
+                .OpenSmartAccessibilityService::class.java
+        )
+
+    @Provides
+    @Singleton
+    fun providePermissionRepository(
+        manager: com.opensmarthome.speaker.permission.PermissionManager
+    ): com.opensmarthome.speaker.permission.PermissionRepository =
+        com.opensmarthome.speaker.permission.PermissionRepository(manager)
+
+    @Provides
+    @Singleton
     fun provideToolExecutor(
         deviceManager: DeviceManager,
         moshi: Moshi,

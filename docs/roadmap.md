@@ -52,7 +52,7 @@ Make it feel like Alexa/Google Home first.
 - [ ] P9.4: Settings → Documents / RAG (RagRepository)
 - [x] P9.5: Settings → Analytics dashboard (AnalyticsViewModel + AnalyticsScreen: summary card, per-tool success rates, reset)
 - [x] P9.6: Settings → Custom system prompt editor (SystemPromptViewModel + SystemPromptScreen)
-- [ ] P9.7: Settings → Permissions checklist (PermissionCatalog)
+- [x] P9.7: Settings → Permissions checklist (PermissionsViewModel + PermissionsScreen, per-row 'Open settings' deep-link)
 - [ ] P9.8: Proactive suggestion bubble in Home (SuggestionState)
 
 ## Phase 10 — Priority 3: UX polish
