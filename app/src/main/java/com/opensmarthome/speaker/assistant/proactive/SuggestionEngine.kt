@@ -65,6 +65,25 @@ class EveningLightsRule : SuggestionRule {
     }
 }
 
+/** Weekend morning: relaxed greeting + weather forecast. */
+class WeekendMorningRule : SuggestionRule {
+    override suspend fun evaluate(context: ProactiveContext): Suggestion? {
+        val isWeekend = context.dayOfWeek == java.util.Calendar.SATURDAY ||
+            context.dayOfWeek == java.util.Calendar.SUNDAY
+        return if (isWeekend && context.hourOfDay in 8..11) {
+            Suggestion(
+                id = "weekend_morning_${context.dayOfWeek}",
+                priority = Suggestion.Priority.LOW,
+                message = "Happy weekend. Want a forecast for the day?",
+                suggestedAction = SuggestedAction(
+                    toolName = "get_forecast",
+                    arguments = emptyMap()
+                )
+            )
+        } else null
+    }
+}
+
 /** Night mode: suggest silent/do-not-disturb after 23:00. */
 class NightQuietRule : SuggestionRule {
     override suspend fun evaluate(context: ProactiveContext): Suggestion? {
