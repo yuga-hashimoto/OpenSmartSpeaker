@@ -124,6 +124,10 @@ private fun SingleColumnLayout(
         WeatherStrip(snapshot)
         Spacer(modifier = Modifier.height(16.dp))
         CountsStrip(snapshot)
+        if (snapshot.nextTimerRemainingSeconds != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            NextTimerLine(snapshot)
+        }
         if (snapshot.recentDeviceActivity.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             DeviceActivityCard(snapshot)
@@ -217,6 +221,25 @@ private fun WeatherStrip(snapshot: AmbientSnapshot) {
                 Text("$h%", style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+}
+
+@Composable
+private fun NextTimerLine(snapshot: AmbientSnapshot) {
+    val secs = snapshot.nextTimerRemainingSeconds ?: return
+    val mm = secs / 60
+    val ss = secs % 60
+    val rendered = "%d:%02d".format(mm, ss)
+    val label = snapshot.nextTimerLabel
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(Icons.Filled.Timer, null)
+        Text(
+            text = if (label != null) "$label · $rendered" else rendered,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 
