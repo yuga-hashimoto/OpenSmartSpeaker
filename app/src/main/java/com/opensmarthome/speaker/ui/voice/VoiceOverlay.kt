@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.opensmarthome.speaker.ui.theme.SpeakerBackground
@@ -66,19 +69,23 @@ fun VoiceOverlay(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // Show AI response or error message
+                // Show AI response or error message. liveRegion=Polite makes
+                // TalkBack announce updates without interrupting the current utterance.
                 if (responseText.isNotBlank()) {
                     Text(
                         text = responseText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (voiceState is VoicePipelineState.Error) VoiceError else SpeakerTextPrimary,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 24.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp)
+                            .semantics { liveRegion = LiveRegionMode.Polite }
                     )
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // State label
+                // State label — announced as a live region so TalkBack users
+                // know when the pipeline transitions (listening → processing → speaking).
                 Text(
                     text = when (voiceState) {
                         is VoicePipelineState.Listening -> "Listening..."
@@ -90,7 +97,8 @@ fun VoiceOverlay(
                         else -> ""
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = SpeakerTextTertiary
+                    color = SpeakerTextTertiary,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                 )
             }
         }
