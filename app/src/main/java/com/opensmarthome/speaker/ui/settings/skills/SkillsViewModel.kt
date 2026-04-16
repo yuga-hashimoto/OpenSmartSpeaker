@@ -1,0 +1,88 @@
+package com.opensmarthome.speaker.ui.settings.skills
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.opensmarthome.speaker.assistant.skills.SkillInstaller
+import com.opensmarthome.speaker.assistant.skills.SkillRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
+
+@HiltViewModel
+class SkillsViewModel @Inject constructor(
+    private val repository: SkillRepository,
+    private val installer: SkillInstaller
+) : ViewModel() {
+
+    sealed class UiState {
+        data object Loading : UiState()
+        data class Loaded(
+            val skills: List<SkillRepository.SkillView>,
+            val installing: Boolean = false,
+            val errorMessage: String? = null
+        ) : UiState()
+    }
+
+    private val _state = MutableStateFlow<UiState>(UiState.Loading)
+    val state: StateFlow<UiState> = _state.asStateFlow()
+
+    init {
+        refresh()
+    }
+
+    fun refresh() {
+        _state.value = UiState.Loaded(skills = repository.listAll())
+    }
+
+    fun delete(name: String) {
+        viewModelScope.launch {
+            val ok = repository.delete(name)
+            if (!ok) {
+                setError("Skill '$name' is bundled or already removed.")
+            }
+            refresh()
+        }
+    }
+
+    fun installFromUrl(url: String) {
+        val trimmed = url.trim()
+        if (trimmed.isBlank()) {
+            setError("URL is empty")
+            return
+        }
+        setInstalling(true)
+        viewModelScope.launch {
+            val result = try {
+                installer.installFromUrl(trimmed)
+            } catch (e: Exception) {
+                Timber.w(e, "Install failed")
+                SkillInstaller.Result.Failed(e.message ?: "Install failed")
+            }
+            when (result) {
+                is SkillInstaller.Result.Installed -> refresh()
+                is SkillInstaller.Result.Failed -> setError(result.reason)
+            }
+            setInstalling(false)
+        }
+    }
+
+    fun clearError() {
+        (_state.value as? UiState.Loaded)?.let {
+            _state.value = it.copy(errorMessage = null)
+        }
+    }
+
+    private fun setError(message: String) {
+        val current = _state.value as? UiState.Loaded ?: UiState.Loaded(emptyList())
+        _state.value = current.copy(errorMessage = message)
+    }
+
+    private fun setInstalling(installing: Boolean) {
+        val current = _state.value as? UiState.Loaded ?: UiState.Loaded(emptyList())
+        _state.value = current.copy(installing = installing)
+    }
+}
