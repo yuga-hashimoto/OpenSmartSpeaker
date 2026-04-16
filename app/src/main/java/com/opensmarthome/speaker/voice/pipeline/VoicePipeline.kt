@@ -17,6 +17,7 @@ import com.opensmarthome.speaker.data.preferences.AppPreferences
 import com.opensmarthome.speaker.data.preferences.PreferenceKeys
 import com.opensmarthome.speaker.tool.ToolCall
 import com.opensmarthome.speaker.tool.ToolExecutor
+import com.opensmarthome.speaker.voice.fastpath.FastPathRouter
 import com.opensmarthome.speaker.voice.stt.AndroidSttProvider
 import com.opensmarthome.speaker.voice.stt.SpeechToText
 import com.opensmarthome.speaker.voice.stt.SttResult
@@ -48,7 +49,8 @@ class VoicePipeline(
     private val preferences: AppPreferences,
     private val sessionDao: SessionDao? = null,
     private val messageDao: MessageDao? = null,
-    private val wakeWordDetector: WakeWordDetector? = null
+    private val wakeWordDetector: WakeWordDetector? = null,
+    private val fastPathRouter: FastPathRouter? = null
 ) {
     private val _state = MutableStateFlow<VoicePipelineState>(VoicePipelineState.Idle)
     val state: StateFlow<VoicePipelineState> = _state.asStateFlow()
@@ -252,6 +254,13 @@ class VoicePipeline(
         _partialText.value = text
         _lastResponse.value = ""
         resetWatchdog()
+
+        // Fast path: match common intents and execute directly, skipping LLM round-trip.
+        // Target <200ms from final STT to spoken confirmation (Priority 1).
+        val fastMatch = fastPathRouter?.match(text)
+        if (fastMatch != null) {
+            if (tryHandleFastPath(text, fastMatch)) return
+        }
 
         // Play thinking sound if enabled
         playThinkingSound()
@@ -522,6 +531,60 @@ class VoicePipeline(
             is com.opensmarthome.speaker.voice.tts.TtsManager -> t.setLanguage(lang)
             is AndroidTtsProvider -> t.setLanguage(lang)
             else -> { /* other providers pull lang from prefs at speak time */ }
+        }
+    }
+
+    // --- Fast Path ---
+
+    /**
+     * Execute a fast-path command directly. Persists a fake assistant message
+     * so conversation history still shows what happened.
+     * Returns true if the fast-path handled the turn end-to-end (state → Idle).
+     */
+    private suspend fun tryHandleFastPath(
+        userText: String,
+        match: com.opensmarthome.speaker.voice.fastpath.FastPathMatch
+    ): Boolean {
+        return try {
+            Timber.d("Fast-path matched: ${match.toolName}")
+            val call = ToolCall(
+                id = "fast_${System.currentTimeMillis()}",
+                name = match.toolName,
+                arguments = match.arguments
+            )
+            val result = toolExecutor.execute(call)
+            val spoken = when {
+                match.spokenConfirmation != null -> match.spokenConfirmation
+                result.success -> "Done."
+                else -> "Sorry, that didn't work."
+            }
+            _lastResponse.value = spoken
+
+            // Persist minimal history so follow-up can reference it
+            val userMessage = AssistantMessage.User(content = userText)
+            val assistantMessage = AssistantMessage.Assistant(content = spoken)
+            conversationHistory.add(userMessage)
+            conversationHistory.add(assistantMessage)
+            trimConversationHistory()
+            persistUserMessage(userText)
+
+            val ttsEnabled = preferences.observe(PreferenceKeys.TTS_ENABLED).first() ?: true
+            if (ttsEnabled) {
+                _state.value = VoicePipelineState.Speaking
+                try {
+                    tts.speak(spoken)
+                } catch (e: Exception) {
+                    Timber.w(e, "TTS failed on fast-path")
+                }
+            }
+
+            abandonAudioFocus()
+            resumeWakeWord()
+            _state.value = VoicePipelineState.Idle
+            true
+        } catch (e: Exception) {
+            Timber.w(e, "Fast-path execution failed, falling back to LLM")
+            false
         }
     }
 

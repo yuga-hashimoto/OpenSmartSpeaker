@@ -6,6 +6,7 @@ import com.opensmarthome.speaker.data.db.MessageDao
 import com.opensmarthome.speaker.data.db.SessionDao
 import com.opensmarthome.speaker.data.preferences.AppPreferences
 import com.opensmarthome.speaker.tool.ToolExecutor
+import com.opensmarthome.speaker.voice.fastpath.FastPathRouter
 import com.opensmarthome.speaker.voice.pipeline.VoicePipeline
 import com.opensmarthome.speaker.voice.stt.AndroidSttProvider
 import com.opensmarthome.speaker.voice.stt.SpeechToText
@@ -48,7 +49,8 @@ object VoiceModule {
         moshi: Moshi,
         preferences: AppPreferences,
         sessionDao: SessionDao,
-        messageDao: MessageDao
+        messageDao: MessageDao,
+        fastPathRouter: FastPathRouter
     ): VoicePipeline = VoicePipeline(
         context = context,
         stt = stt,
@@ -58,6 +60,7 @@ object VoiceModule {
         moshi = moshi,
         preferences = preferences,
         sessionDao = sessionDao,
-        messageDao = messageDao
+        messageDao = messageDao,
+        fastPathRouter = fastPathRouter
     )
 }
