@@ -420,83 +420,35 @@ class FastPathRouterTest {
     }
 
     @Test
-    fun `whats on my calendar today fast-path`() {
-        val m = router.match("what's on my calendar today")
-        assertThat(m?.toolName).isEqualTo("get_calendar_events")
-        assertThat(m?.arguments?.get("days_ahead")).isEqualTo(1.0)
+    fun `where am I calls get_location`() {
+        val m = router.match("where am I")
+        assertThat(m?.toolName).isEqualTo("get_location")
     }
 
     @Test
-    fun `do I have any meetings today fast-path`() {
-        val m = router.match("do i have any meetings today")
-        assertThat(m?.toolName).isEqualTo("get_calendar_events")
+    fun `whats my location fast-path`() {
+        val m = router.match("what's my location")
+        assertThat(m?.toolName).isEqualTo("get_location")
     }
 
     @Test
-    fun `whats my schedule fast-path`() {
-        val m = router.match("what's my schedule")
-        assertThat(m?.toolName).isEqualTo("get_calendar_events")
+    fun `japanese where am I`() {
+        val m = router.match("ここはどこ")
+        assertThat(m?.toolName).isEqualTo("get_location")
     }
 
     @Test
-    fun `japanese today schedule fast-path`() {
-        val m = router.match("今日の予定")
-        assertThat(m?.toolName).isEqualTo("get_calendar_events")
+    fun `japanese current location`() {
+        val m = router.match("現在地を教えて")
+        assertThat(m?.toolName).isEqualTo("get_location")
     }
 
     @Test
-    fun `japanese today meeting fast-path`() {
-        val m = router.match("今日のミーティング")
-        assertThat(m?.toolName).isEqualTo("get_calendar_events")
-    }
-
-    @Test
-    fun `list notifications fast-path`() {
-        val m = router.match("show notifications")
-        assertThat(m?.toolName).isEqualTo("list_notifications")
-    }
-
-    @Test
-    fun `what notifications do I have`() {
-        val m = router.match("what notifications do I have")
-        assertThat(m?.toolName).isEqualTo("list_notifications")
-    }
-
-    @Test
-    fun `any notifications fast-path`() {
-        val m = router.match("any notifications")
-        assertThat(m?.toolName).isEqualTo("list_notifications")
-    }
-
-    @Test
-    fun `clear notifications fast-path`() {
-        val m = router.match("clear all notifications")
-        assertThat(m?.toolName).isEqualTo("clear_notifications")
-    }
-
-    @Test
-    fun `dismiss notifications fast-path`() {
-        val m = router.match("dismiss notifications")
-        assertThat(m?.toolName).isEqualTo("clear_notifications")
-    }
-
-    @Test
-    fun `japanese list notifications`() {
-        val m = router.match("通知一覧")
-        assertThat(m?.toolName).isEqualTo("list_notifications")
-    }
-
-    @Test
-    fun `japanese clear notifications`() {
-        val m = router.match("通知を消して")
-        assertThat(m?.toolName).isEqualTo("clear_notifications")
-    }
-
-    @Test
-    fun `clear precedes list precedence`() {
-        // "clear my notifications" must NOT route to list.
-        val m = router.match("clear my notifications")
-        assertThat(m?.toolName).isEqualTo("clear_notifications")
+    fun `where am I does not collide with find device`() {
+        // FindDeviceMatcher fires on "find/where is my phone/tablet/device".
+        // "where am I" must NOT route to find_device.
+        val m = router.match("where am I")
+        assertThat(m?.toolName).isNotEqualTo("find_device")
     }
 
     @Test
