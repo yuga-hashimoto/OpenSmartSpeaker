@@ -41,10 +41,11 @@ class DeviceToolExecutor(
         ),
         ToolSchema(
             name = "execute_command",
-            description = "Execute a command on a smart home device. Provide either device_id for a single device, or device_type to apply to all devices of that type (e.g. all lights, all media players).",
+            description = "Execute a command on a smart home device. Provide device_id for a single device, device_type to apply to all devices of that type, or device_type + room to scope to one room (e.g. all bedroom lights).",
             parameters = mapOf(
                 "device_id" to ToolParameter("string", "The device ID (optional if device_type is provided)", required = false),
-                "device_type" to ToolParameter("string", "Device type to target as a group: light, switch, climate, media_player, cover, fan (optional if device_id is provided)", required = false),
+                "device_type" to ToolParameter("string", "Device type to target as a group: light, switch, climate, media_player, cover, fan", required = false),
+                "room" to ToolParameter("string", "Optional room name to scope the device_type query (e.g. 'bedroom', 'living room')", required = false),
                 "action" to ToolParameter("string", "The action to perform (turn_on, turn_off, toggle, media_play, media_pause, media_next_track, media_previous_track, set_brightness, set_temperature, etc.)", required = true),
                 "parameters" to ToolParameter("object", "Additional parameters as JSON", required = false)
             )
@@ -138,9 +139,14 @@ class DeviceToolExecutor(
 
         if (!deviceType.isNullOrBlank()) {
             val type = DeviceType.fromString(deviceType)
-            val targets = deviceManager.getDevicesByType(type)
+            val room = (call.arguments["room"] as? String)?.trim()?.takeIf { it.isNotBlank() }
+            val all = deviceManager.getDevicesByType(type)
+            val targets = if (room == null) all
+                else all.filter { it.room?.equals(room, ignoreCase = true) == true }
             if (targets.isEmpty()) {
-                return ToolResult(call.id, false, "", "No devices of type $deviceType")
+                val msg = if (room != null) "No $deviceType devices in room '$room'"
+                else "No devices of type $deviceType"
+                return ToolResult(call.id, false, "", msg)
             }
             var successes = 0
             var failures = 0
