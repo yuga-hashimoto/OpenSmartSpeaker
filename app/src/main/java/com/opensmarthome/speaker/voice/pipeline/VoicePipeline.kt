@@ -213,6 +213,7 @@ class VoicePipeline(
         resetWatchdog()
 
         var finalText = ""
+        latencyRecorder.startSpan(LatencyRecorder.Span.STT_DURATION)
         try {
             stt.startListening().collect { result ->
                 when (result) {
@@ -222,8 +223,10 @@ class VoicePipeline(
                     is SttResult.Final -> {
                         finalText = result.text
                         _partialText.value = result.text
+                        latencyRecorder.endSpan(LatencyRecorder.Span.STT_DURATION)
                     }
                     is SttResult.Error -> {
+                        latencyRecorder.endSpan(LatencyRecorder.Span.STT_DURATION)
                         Timber.w("STT error: ${result.message}")
                         playErrorBeep()
                         val recovery = errorClassifier.classify(
@@ -241,6 +244,7 @@ class VoicePipeline(
                 }
             }
         } catch (e: Exception) {
+            latencyRecorder.endSpan(LatencyRecorder.Span.STT_DURATION)
             Timber.e(e, "STT failed")
             val recovery = errorClassifier.classify(e.message, e, kind = currentProviderKind())
             _lastResponse.value = recovery.userSpokenMessage
