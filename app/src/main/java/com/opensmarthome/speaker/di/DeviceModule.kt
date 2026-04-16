@@ -20,9 +20,11 @@ import com.opensmarthome.speaker.tool.info.OpenMeteoWeatherProvider
 import com.opensmarthome.speaker.tool.info.SearchToolExecutor
 import com.opensmarthome.speaker.tool.info.WeatherToolExecutor
 import com.opensmarthome.speaker.tool.system.AndroidAppLauncher
+import com.opensmarthome.speaker.tool.system.AndroidCalendarProvider
 import com.opensmarthome.speaker.tool.system.AndroidNotificationProvider
 import com.opensmarthome.speaker.tool.system.AndroidTimerManager
 import com.opensmarthome.speaker.tool.system.AndroidVolumeManager
+import com.opensmarthome.speaker.tool.system.CalendarToolExecutor
 import com.opensmarthome.speaker.tool.system.NotificationToolExecutor
 import com.opensmarthome.speaker.tool.system.SystemToolExecutor
 import com.squareup.moshi.Moshi
@@ -92,6 +94,9 @@ object DeviceModule {
             ),
             NotificationToolExecutor(
                 AndroidNotificationProvider(context)
+            ),
+            CalendarToolExecutor(
+                AndroidCalendarProvider(context)
             )
         )
     )
