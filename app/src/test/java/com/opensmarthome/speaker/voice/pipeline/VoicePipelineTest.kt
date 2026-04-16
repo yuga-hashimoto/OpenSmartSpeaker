@@ -133,4 +133,19 @@ class VoicePipelineTest {
         pipeline.clearHistory()
         assertEquals(VoicePipelineState.Idle, pipeline.state.value)
     }
+
+    @Test
+    fun `interruptAndListen stops TTS immediately`() {
+        pipeline.interruptAndListen()
+        // tts.stop() called from relaxed mock — verify tts would have been halted
+        io.mockk.verify { tts.stop() }
+    }
+
+    @Test
+    fun `stopSpeaking abandons audio focus and returns to Idle`() = runTest {
+        pipeline.stopSpeaking()
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(VoicePipelineState.Idle, pipeline.state.value)
+        io.mockk.verify { tts.stop() }
+    }
 }

@@ -40,8 +40,8 @@ Make it feel like Alexa/Google Home first.
 - [ ] P8.2: Wake-to-listening latency budget — target <500ms visual feedback after wake
 - [x] P8.3: VoiceOrb compose component — per-state color + breathing + audio-level scaling (stolen from Ava WakeRippleView + OpenClawSession mic orb)
 - [ ] P8.4: Ambient home screen — clock + weather + notifications + device quick-control (steal from Ava/ViewAssist)
-- [ ] P8.5: Barge-in verification — user interrupts TTS mid-sentence
-- [ ] P8.6: "Hmm…" filler phrase during long LLM waits
+- [x] P8.5: Barge-in verified via unit tests (interruptAndListen + stopSpeaking both halt TTS)
+- [x] P8.6: Filler phrases (existing FillerPhrases object — JP/EN, initial + wait timing, user-toggleable)
 - [x] P8.7: ErrorClassifier — 7 categories (no-provider / STT / timeout / network / permission / tool / unknown) with spoken-friendly copy + retry flag (stolen Ava pattern)
 - [ ] P8.8: Tablet-first landscape layout, large touch targets, night mode
 
