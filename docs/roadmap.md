@@ -42,7 +42,7 @@ Give the agent Android-native capabilities.
 
 - [x] P2.1: Timer/Alarm tool (set timer, set alarm, cancel)
 - [x] P2.2: Notification tool (read notifications, clear)
-- [ ] P2.3: Calendar tool (query events, create reminders)
+- [x] P2.3: Calendar tool (query events, requires READ_CALENDAR)
 - [x] P2.4: App launcher tool (open apps by name)
 - [x] P2.5: Volume/Media control tool
 - [ ] P2.6: Contacts/Phone tool (lookup, call)
