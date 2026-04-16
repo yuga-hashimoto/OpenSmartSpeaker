@@ -64,14 +64,14 @@ Make it feel like Alexa/Google Home first.
 - [x] P10.6: Music Assistant / media control UI — NowPlayingBar wired to dispatch play/pause/next/prev via DeviceManager.executeCommand; HA media_player service names (media_play/media_pause/media_next_track/media_previous_track); HomeViewModel.dispatchMediaAction; clock tick moved from ViewModel to Composable for testability; HomeViewModelTest covers action wiring
 
 ## Phase 11 — Priority 4: Hybrid / External Gateway
-- [ ] P11.1: HermesAgent protocol adapter (new AssistantProvider)
-- [ ] P11.2: OpenClawProvider streaming + tool forwarding
+- [x] P11.1: HermesAgent protocol adapter — HermesAgentProvider implements AssistantProvider; NDJSON streaming; Bearer token auth; health probe; test coverage with MockWebServer
+- [x] P11.2: OpenClawProvider streaming + tool forwarding — send() now aggregates ToolCallRequest from tool_call deltas into Assistant.toolCalls; request payload forwards full parameter schema (type/description/required/enum); capabilities.isLocal=false so ErrorClassifier surfaces network issues honestly
 - [x] P11.3: Heavy task hint — HeavyTaskDetector with conservative heuristics (long input, heavy keywords EN+JA, vision request vs local capability). Router policy can consult it when Auto; UI can show escalation hint to user
 - [x] P11.4: Unified provider switcher polish — ProvidersScreen + ProvidersViewModel lists registered AssistantProviders with badges (On-device / Streaming / Tools / Vision), active highlighted; tap to call router.selectProvider; ProvidersViewModelTest covers rows + selection
 
 ## Phase 12 — Priority 5: Refactor / Quality
 - [x] P12.1: Dead code sweep — removed dead `is AndroidTtsProvider` branch in VoicePipeline.applyTtsLanguagePreference (TtsManager is the only injected TextToSpeech, so the direct provider branch was unreachable). Removed corresponding unused import
-- [ ] P12.2: CameraX integration (replaces skeleton)
+- [x] P12.2: Camera integration — IntentCameraProvider uses ACTION_IMAGE_CAPTURE via ActivityResultContracts.TakePicture with FileProvider-backed URI; MainActivity registers it in CameraProviderHolder on onCreate so take_photo tool now produces real image bytes (no new dependencies vs CameraX)
 - [x] P12.3: MediaProjection integration — MediaProjectionScreenRecorder uses MediaProjection + MediaRecorder + VirtualDisplay to record the display as MP4 in cache; consent requested via ActivityResultContracts.StartActivityForResult; MainActivity registers it in ScreenRecorderHolder on onCreate
 - [x] P12.4: SecurePreferences audit — SWITCHBOT_TOKEN moved from plaintext DataStore to SecurePreferences (was leaking); added KEY_SWITCHBOT_TOKEN/SECRET/MQTT_PASSWORD constants; removed silent fallback to plaintext SharedPreferences on keystore failure; deleted dead plaintext secret keys (HA_TOKEN, OPENCLAW_API_KEY, SWITCHBOT_SECRET, MQTT_PASSWORD from PreferenceKeys)
 - [x] P12.5: Unified OkHttp with sensible timeouts — TtsManager no longer builds its own client; all HTTP uses NetworkModule singleton (30s connect / 60s read / 30s write)
