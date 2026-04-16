@@ -156,6 +156,16 @@ object DeviceModule {
 
     @Provides
     @Singleton
+    fun provideSkillRepository(
+        @ApplicationContext context: Context,
+        registry: SkillRegistry
+    ): com.opensmarthome.speaker.assistant.skills.SkillRepository {
+        val userSkillsDir = java.io.File(context.filesDir, "skills").apply { mkdirs() }
+        return com.opensmarthome.speaker.assistant.skills.SkillRepository(registry, userSkillsDir)
+    }
+
+    @Provides
+    @Singleton
     fun provideToolExecutor(
         deviceManager: DeviceManager,
         moshi: Moshi,
