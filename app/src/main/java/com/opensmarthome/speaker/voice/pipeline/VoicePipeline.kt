@@ -22,7 +22,6 @@ import com.opensmarthome.speaker.voice.metrics.LatencyRecorder
 import com.opensmarthome.speaker.voice.stt.AndroidSttProvider
 import com.opensmarthome.speaker.voice.stt.SpeechToText
 import com.opensmarthome.speaker.voice.stt.SttResult
-import com.opensmarthome.speaker.voice.tts.AndroidTtsProvider
 import com.opensmarthome.speaker.voice.tts.TextToSpeech
 import com.opensmarthome.speaker.service.VoiceService
 import com.opensmarthome.speaker.voice.wakeword.WakeWordDetector
@@ -551,11 +550,9 @@ class VoicePipeline(
 
     private suspend fun applyTtsLanguagePreference() {
         val lang = preferences.observe(PreferenceKeys.TTS_LANGUAGE).first()?.takeIf { it.isNotBlank() } ?: return
-        when (val t = this.tts) {
-            is com.opensmarthome.speaker.voice.tts.TtsManager -> t.setLanguage(lang)
-            is AndroidTtsProvider -> t.setLanguage(lang)
-            else -> { /* other providers pull lang from prefs at speak time */ }
-        }
+        // Only TtsManager exposes a setLanguage entry point; other provider
+        // implementations pull language from prefs at speak time.
+        (this.tts as? com.opensmarthome.speaker.voice.tts.TtsManager)?.setLanguage(lang)
     }
 
     // --- Fast Path ---
