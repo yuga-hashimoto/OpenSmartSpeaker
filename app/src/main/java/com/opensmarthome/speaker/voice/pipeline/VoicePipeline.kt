@@ -336,7 +336,15 @@ class VoicePipeline(
                                     name = toolCallReq.name,
                                     arguments = args
                                 )
+                                latencyRecorder.startSpan(
+                                    LatencyRecorder.Span.TOOL_EXECUTION,
+                                    key = "tool_${toolCallReq.id}"
+                                )
                                 val toolResult = toolExecutor.execute(toolCall)
+                                latencyRecorder.endSpan(
+                                    LatencyRecorder.Span.TOOL_EXECUTION,
+                                    key = "tool_${toolCallReq.id}"
+                                )
                                 val resultMessage = AssistantMessage.ToolCallResult(
                                     callId = toolCallReq.id,
                                     result = if (toolResult.success) toolResult.data else (toolResult.error ?: "Error"),
