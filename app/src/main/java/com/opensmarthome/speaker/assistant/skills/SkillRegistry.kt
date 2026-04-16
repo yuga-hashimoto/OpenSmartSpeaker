@@ -19,6 +19,7 @@ import timber.log.Timber
 class SkillRegistry {
 
     private val skills = mutableMapOf<String, Skill>()
+    private val disabled = mutableSetOf<String>()
 
     fun register(skill: Skill) {
         if (skills.containsKey(skill.name)) {
@@ -33,19 +34,34 @@ class SkillRegistry {
 
     fun get(name: String): Skill? = skills[name]
 
-    fun unregister(name: String): Boolean = skills.remove(name) != null
+    fun unregister(name: String): Boolean {
+        disabled.remove(name)
+        return skills.remove(name) != null
+    }
 
     fun all(): List<Skill> = skills.values.toList()
 
     fun isEmpty(): Boolean = skills.isEmpty()
 
+    /** Returns only skills that are currently enabled (the default state). */
+    fun enabled(): List<Skill> = skills.values.filter { it.name !in disabled }
+
+    fun isEnabled(name: String): Boolean = skills.containsKey(name) && name !in disabled
+
+    fun setEnabled(name: String, enabled: Boolean) {
+        if (!skills.containsKey(name)) return
+        if (enabled) disabled.remove(name) else disabled.add(name)
+    }
+
     /**
      * Build the XML skill listing for system prompt injection.
-     * Returns an empty string when no skills are registered.
+     * Only includes enabled skills — disabled ones stay out of the prompt so
+     * the LLM won't reference them.
      */
     fun toPromptXml(): String {
-        if (skills.isEmpty()) return ""
-        val items = skills.values.joinToString("\n") { skill ->
+        val active = enabled()
+        if (active.isEmpty()) return ""
+        val items = active.joinToString("\n") { skill ->
             """  <skill>
     <name>${skill.name.escapeXml()}</name>
     <description>${skill.description.escapeXml()}</description>

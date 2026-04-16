@@ -48,6 +48,11 @@ class SkillsViewModel @Inject constructor(
         }
     }
 
+    fun setEnabled(name: String, enabled: Boolean) {
+        repository.setEnabled(name, enabled)
+        refresh()
+    }
+
     fun installFromUrl(url: String) {
         val trimmed = url.trim()
         if (trimmed.isBlank()) {

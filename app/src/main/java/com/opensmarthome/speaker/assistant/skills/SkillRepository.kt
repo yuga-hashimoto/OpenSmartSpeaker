@@ -15,7 +15,8 @@ class SkillRepository(
         val name: String,
         val description: String,
         val source: String,
-        val deletable: Boolean
+        val deletable: Boolean,
+        val enabled: Boolean
     )
 
     fun listAll(): List<SkillView> =
@@ -25,9 +26,14 @@ class SkillRepository(
                 description = skill.description,
                 source = skill.source,
                 deletable = skill.source.startsWith("installed:") ||
-                    skill.source.startsWith("file:${userSkillsDir.absolutePath}")
+                    skill.source.startsWith("file:${userSkillsDir.absolutePath}"),
+                enabled = registry.isEnabled(skill.name)
             )
         }
+
+    fun setEnabled(name: String, enabled: Boolean) {
+        registry.setEnabled(name, enabled)
+    }
 
     /**
      * Delete an installed user skill. Cannot delete bundled skills.
