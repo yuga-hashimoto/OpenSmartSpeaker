@@ -3,24 +3,19 @@ package com.opensmarthome.speaker.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opensmarthome.speaker.device.DeviceManager
+import com.opensmarthome.speaker.device.model.DeviceCommand
 import com.opensmarthome.speaker.device.model.DeviceType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val deviceManager: DeviceManager
 ) : ViewModel() {
-
-    private val _currentTime = MutableStateFlow(LocalDateTime.now())
-    val currentTime: StateFlow<LocalDateTime> = _currentTime.asStateFlow()
 
     private val _weather = MutableStateFlow<WeatherData?>(null)
     val weather: StateFlow<WeatherData?> = _weather.asStateFlow()
@@ -32,12 +27,6 @@ class HomeViewModel @Inject constructor(
     val nowPlaying: StateFlow<NowPlayingInfo?> = _nowPlaying.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            while (isActive) {
-                _currentTime.value = LocalDateTime.now()
-                delay(1000L)
-            }
-        }
         viewModelScope.launch {
             deviceManager.devices.collect { devices ->
                 // Weather from sensor devices
@@ -79,6 +68,7 @@ class HomeViewModel @Inject constructor(
                 }
                 _nowPlaying.value = mediaDevice?.let {
                     NowPlayingInfo(
+                        deviceId = it.id,
                         deviceName = it.name,
                         mediaTitle = it.state.mediaTitle,
                         mediaArtist = it.state.attributes["media_artist"] as? String,
@@ -86,6 +76,14 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun dispatchMediaAction(deviceId: String, action: MediaAction) {
+        viewModelScope.launch {
+            deviceManager.executeCommand(
+                DeviceCommand(deviceId = deviceId, action = action.haService)
+            )
         }
     }
 }

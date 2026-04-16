@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,14 +28,27 @@ import com.opensmarthome.speaker.ui.theme.SpeakerTextPrimary
 import com.opensmarthome.speaker.ui.theme.SpeakerTextSecondary
 
 data class NowPlayingInfo(
+    val deviceId: String,
     val deviceName: String,
     val mediaTitle: String?,
     val mediaArtist: String?,
     val isPlaying: Boolean
 )
 
+/** Service actions the bar dispatches to its host. Names match HA media_player services. */
+enum class MediaAction(val haService: String) {
+    PLAY("media_play"),
+    PAUSE("media_pause"),
+    NEXT("media_next_track"),
+    PREVIOUS("media_previous_track")
+}
+
 @Composable
-fun NowPlayingBar(nowPlaying: NowPlayingInfo, modifier: Modifier = Modifier) {
+fun NowPlayingBar(
+    nowPlaying: NowPlayingInfo,
+    onMediaAction: (MediaAction) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
@@ -68,10 +84,20 @@ fun NowPlayingBar(nowPlaying: NowPlayingInfo, modifier: Modifier = Modifier) {
                     )
                 }
             }
-            if (nowPlaying.isPlaying) {
-                IconButton(onClick = { }) {
-                    Icon(Icons.Filled.Pause, contentDescription = "Pause", tint = SpeakerTextPrimary)
-                }
+            IconButton(onClick = { onMediaAction(MediaAction.PREVIOUS) }) {
+                Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = SpeakerTextPrimary)
+            }
+            IconButton(onClick = {
+                onMediaAction(if (nowPlaying.isPlaying) MediaAction.PAUSE else MediaAction.PLAY)
+            }) {
+                Icon(
+                    imageVector = if (nowPlaying.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (nowPlaying.isPlaying) "Pause" else "Play",
+                    tint = SpeakerTextPrimary
+                )
+            }
+            IconButton(onClick = { onMediaAction(MediaAction.NEXT) }) {
+                Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = SpeakerTextPrimary)
             }
         }
     }

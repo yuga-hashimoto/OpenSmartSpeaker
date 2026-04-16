@@ -61,7 +61,7 @@ Make it feel like Alexa/Google Home first.
 - [x] P10.3: Offline-first error states — ErrorClassifier.ProviderKind (LOCAL/REMOTE/UNKNOWN); LOCAL provider remaps network-shaped errors to LOCAL_ENGINE, adds model-load patterns; ProviderCapabilities.isLocal propagates from EmbeddedLlmProvider; VoicePipeline passes kind based on active provider
 - [ ] P10.4: Accessibility pass (TalkBack, large-text)
 - [ ] P10.5: Dark/light mode consistency
-- [ ] P10.6: Music Assistant / media control UI (inspired by dash-voice)
+- [x] P10.6: Music Assistant / media control UI — NowPlayingBar wired to dispatch play/pause/next/prev via DeviceManager.executeCommand; HA media_player service names (media_play/media_pause/media_next_track/media_previous_track); HomeViewModel.dispatchMediaAction; clock tick moved from ViewModel to Composable for testability; HomeViewModelTest covers action wiring
 
 ## Phase 11 — Priority 4: Hybrid / External Gateway
 - [ ] P11.1: HermesAgent protocol adapter (new AssistantProvider)
