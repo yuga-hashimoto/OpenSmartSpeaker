@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenSmartSpeaker</string>
+    <string name="tab_chat">Chat</string>
+    <string name="tab_dashboard">Panou</string>
+    <string name="tab_ambient">Ambient</string>
+    <string name="tab_settings">Setări</string>
+    <string name="accessibility_service_description">Permite agentului smart speaker să citească textul vizibil pe ecran și să automatizeze acțiunile din interfață în numele tău.</string>
+    <string name="accessibility_service_summary">Activează pentru a permite agentului de pe dispozitiv să vadă și să controleze ecranul.</string>
+    <string name="a11y_service_description">OpenSmartSpeaker folosește acest serviciu de accesibilitate pentru a citi ceea ce este pe ecran și pentru a apăsa butoane în numele tău atunci când îi ceri. Niciun fel de date nu părăsesc dispozitivul. Îl poți dezactiva oricând din Setări.</string>
+    <string name="voice_tile_label">Vorbește</string>
+    <string name="voice_tile_content_description">Începe o sesiune vocală cu OpenSmartSpeaker</string>
+    <string name="locale_picker_title">Limbă</string>
+    <string name="locale_picker_system_default">Implicit de sistem</string>
+    <string name="locale_picker_requires_android_13">Necesită Android 13 sau mai nou</string>
+    <string name="locale_picker_close">Închide</string>
+</resources>
