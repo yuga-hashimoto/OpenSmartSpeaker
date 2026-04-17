@@ -39,6 +39,9 @@ import com.opensmarthome.speaker.assistant.routine.RoomRoutineStore
 import com.opensmarthome.speaker.assistant.routine.RoutineToolExecutor
 import com.opensmarthome.speaker.tool.accessibility.AccessibilityScreenReader
 import com.opensmarthome.speaker.tool.a11y.ReadActiveScreenToolExecutor
+import com.opensmarthome.speaker.tool.a11y.ScrollScreenToolExecutor
+import com.opensmarthome.speaker.tool.a11y.TapByTextToolExecutor
+import com.opensmarthome.speaker.tool.a11y.TypeTextToolExecutor
 import com.opensmarthome.speaker.tool.accessibility.ScreenToolExecutor
 import com.opensmarthome.speaker.data.db.DocumentChunkDao
 import com.opensmarthome.speaker.data.db.ToolUsageDao
@@ -360,6 +363,9 @@ object DeviceModule {
                 AccessibilityScreenReader()
             ),
             ReadActiveScreenToolExecutor(a11yServiceHolder),
+            TapByTextToolExecutor(a11yServiceHolder),
+            ScrollScreenToolExecutor(a11yServiceHolder),
+            TypeTextToolExecutor(a11yServiceHolder),
             MemoryToolExecutor(memoryDao),
             RagToolExecutor(RagService(documentChunkDao)),
             RoutineToolExecutor(routineStore, delegatingExecutor),

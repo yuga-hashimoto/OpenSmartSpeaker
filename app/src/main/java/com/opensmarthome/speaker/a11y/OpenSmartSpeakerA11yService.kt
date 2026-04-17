@@ -2,8 +2,14 @@ package com.opensmarthome.speaker.a11y
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.accessibilityservice.GestureDescription
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
+import android.graphics.Path
 import android.graphics.Rect
+import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,7 +27,7 @@ import javax.inject.Inject
  * call back into the live service without depending on Android context.
  */
 @AndroidEntryPoint
-class OpenSmartSpeakerA11yService : AccessibilityService() {
+open class OpenSmartSpeakerA11yService : AccessibilityService() {
 
     @Inject
     lateinit var holder: A11yServiceHolder
@@ -84,9 +90,177 @@ class OpenSmartSpeakerA11yService : AccessibilityService() {
         return walkTree(root)
     }
 
+    /**
+     * BFS walk of [rootInActiveWindow] to find the first clickable node whose
+     * `text` or `contentDescription` contains [query] (case-insensitive).
+     *
+     * Returns null if the root is unavailable or no match is found. The
+     * returned node is NOT recycled — caller owns it. Sibling nodes visited
+     * during the search are recycled.
+     */
+    fun findNodeByText(query: String): AccessibilityNodeInfo? {
+        if (query.isBlank()) return null
+        val root = rootInActiveWindow ?: return null
+        val needle = query.trim().lowercase()
+        val queue: ArrayDeque<Pair<AccessibilityNodeInfo, Int>> = ArrayDeque()
+        queue.addLast(root to 0)
+        var visited = 0
+        var match: AccessibilityNodeInfo? = null
+        while (queue.isNotEmpty() && visited < MAX_NODES && match == null) {
+            val (node, depth) = queue.removeFirst()
+            visited++
+            val text = node.text?.toString()?.lowercase().orEmpty()
+            val desc = node.contentDescription?.toString()?.lowercase().orEmpty()
+            if (node.isClickable && (text.contains(needle) || desc.contains(needle))) {
+                match = node
+                continue
+            }
+            if (depth < MAX_DEPTH) {
+                for (i in 0 until node.childCount) {
+                    val child = node.getChild(i) ?: continue
+                    queue.addLast(child to depth + 1)
+                }
+            }
+            if (node !== root) {
+                @Suppress("DEPRECATION")
+                runCatching { node.recycle() }
+            }
+        }
+        // Drain remaining queue (they're not the match, not the root).
+        while (queue.isNotEmpty()) {
+            val (leftover, _) = queue.removeFirst()
+            if (leftover !== root && leftover !== match) {
+                @Suppress("DEPRECATION")
+                runCatching { leftover.recycle() }
+            }
+        }
+        return match
+    }
+
+    /**
+     * Computes [node]'s on-screen centre and dispatches a short tap gesture
+     * via [dispatchTap]. Returns true on success, false if the node has a
+     * zero-area bounds, dispatch returns false, or an exception is thrown.
+     */
+    fun performTapOnNode(node: AccessibilityNodeInfo): Boolean {
+        val bounds = Rect().also { node.getBoundsInScreen(it) }
+        if (bounds.width() <= 0 || bounds.height() <= 0) {
+            Timber.w("performTapOnNode: empty bounds %s", bounds)
+            return false
+        }
+        val cx = bounds.exactCenterX()
+        val cy = bounds.exactCenterY()
+        return dispatchTap(cx, cy, TAP_DURATION_MS)
+    }
+
+    /**
+     * Swipes across the visible display centre in [direction]
+     * ("up", "down", "left", "right"). Distance is 60% of the root window's
+     * width (horizontal) or height (vertical). Returns false for unknown
+     * directions or when dispatch fails.
+     */
+    fun performSwipe(direction: String, durationMs: Long = DEFAULT_SWIPE_DURATION_MS): Boolean {
+        val root = rootInActiveWindow
+        val bounds = Rect()
+        if (root != null) {
+            root.getBoundsInScreen(bounds)
+        }
+        // Fall back to a sensible default if root bounds are empty.
+        if (bounds.width() <= 0 || bounds.height() <= 0) {
+            bounds.set(0, 0, DEFAULT_WINDOW_WIDTH_PX, DEFAULT_WINDOW_HEIGHT_PX)
+        }
+        val cx = bounds.exactCenterX()
+        val cy = bounds.exactCenterY()
+        val horizDelta = bounds.width() * SWIPE_DISTANCE_FRACTION / 2f
+        val vertDelta = bounds.height() * SWIPE_DISTANCE_FRACTION / 2f
+        val (sx, sy, ex, ey) = when (direction.trim().lowercase()) {
+            // A scroll-up gesture moves content up, i.e. finger swipes from
+            // bottom to top.
+            "up" -> floatArrayOf(cx, cy + vertDelta, cx, cy - vertDelta)
+            "down" -> floatArrayOf(cx, cy - vertDelta, cx, cy + vertDelta)
+            "left" -> floatArrayOf(cx + horizDelta, cy, cx - horizDelta, cy)
+            "right" -> floatArrayOf(cx - horizDelta, cy, cx + horizDelta, cy)
+            else -> {
+                Timber.w("performSwipe: unknown direction %s", direction)
+                return false
+            }
+        }.let { arr -> SwipeCoords(arr[0], arr[1], arr[2], arr[3]) }
+        return dispatchSwipe(sx, sy, ex, ey, durationMs)
+    }
+
+    /**
+     * Sends [text] to the currently focused input node via
+     * `ACTION_SET_TEXT`. If that fails, falls back to putting [text] on the
+     * clipboard and dispatching `ACTION_PASTE`.
+     *
+     * Returns false when there is no focused input node, or when both paths
+     * fail.
+     */
+    fun typeIntoFocused(text: String): Boolean {
+        val focused = findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return false
+        val bundle = Bundle().apply {
+            putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                text
+            )
+        }
+        val setOk = runCatching {
+            focused.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle)
+        }.getOrElse { false }
+        if (setOk) return true
+        // Fallback: clipboard paste.
+        val clipboard = runCatching {
+            getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        }.getOrNull() ?: return false
+        runCatching {
+            clipboard.setPrimaryClip(ClipData.newPlainText("a11y-paste", text))
+        }.onFailure { return false }
+        return runCatching {
+            focused.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+        }.getOrElse { false }
+    }
+
+    /**
+     * Dispatches a single-point tap gesture at ([x], [y]). Isolated into an
+     * open method so unit tests can stub it without mocking
+     * [GestureDescription] or [dispatchGesture] directly.
+     */
+    internal open fun dispatchTap(x: Float, y: Float, durationMs: Long): Boolean {
+        val path = Path().apply { moveTo(x, y); lineTo(x, y) }
+        val stroke = GestureDescription.StrokeDescription(path, 0L, durationMs)
+        val gesture = GestureDescription.Builder().addStroke(stroke).build()
+        return runCatching { dispatchGesture(gesture, null, null) }.getOrElse { false }
+    }
+
+    /**
+     * Dispatches a straight-line swipe from ([sx], [sy]) to ([ex], [ey]).
+     * Isolated for the same reason as [dispatchTap].
+     */
+    internal open fun dispatchSwipe(
+        sx: Float,
+        sy: Float,
+        ex: Float,
+        ey: Float,
+        durationMs: Long
+    ): Boolean {
+        val path = Path().apply { moveTo(sx, sy); lineTo(ex, ey) }
+        val stroke = GestureDescription.StrokeDescription(path, 0L, durationMs)
+        val gesture = GestureDescription.Builder().addStroke(stroke).build()
+        return runCatching { dispatchGesture(gesture, null, null) }.getOrElse { false }
+    }
+
+    private data class SwipeCoords(val sx: Float, val sy: Float, val ex: Float, val ey: Float)
+
     companion object {
         const val MAX_DEPTH: Int = 8
         const val MAX_NODES: Int = 200
+        const val TAP_DURATION_MS: Long = 50L
+        const val DEFAULT_SWIPE_DURATION_MS: Long = 300L
+        const val SWIPE_DISTANCE_FRACTION: Float = 0.6f
+
+        /** Conservative fallback window size when rootInActiveWindow bounds are empty. */
+        private const val DEFAULT_WINDOW_WIDTH_PX: Int = 1080
+        private const val DEFAULT_WINDOW_HEIGHT_PX: Int = 1920
 
         /**
          * Pure BFS walker extracted for unit testing. Consumes a root
