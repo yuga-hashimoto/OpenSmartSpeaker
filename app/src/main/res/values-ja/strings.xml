@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenSmartSpeaker</string>
+    <string name="tab_chat">チャット</string>
+    <string name="tab_dashboard">ダッシュボード</string>
+    <string name="tab_ambient">アンビエント</string>
+    <string name="tab_settings">設定</string>
+    <string name="accessibility_service_description">スマートスピーカーエージェントが現在表示されている画面のテキストを読み取り、UI操作を代行できるようにします。</string>
+    <string name="accessibility_service_summary">オンデバイスエージェントが画面を認識・操作できるようにします。</string>
+    <string name="a11y_service_description">OpenSmartSpeakerは、このアクセシビリティサービスを使用して、画面に表示されている内容を読み取り、指示に応じてボタンをタップします。端末外へデータを送信することはありません。設定からいつでも無効にできます。</string>
+    <string name="voice_tile_label">話す</string>
+    <string name="voice_tile_content_description">OpenSmartSpeakerで音声セッションを開始</string>
+</resources>
