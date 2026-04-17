@@ -12,6 +12,7 @@ import com.opensmarthome.speaker.tool.rag.RagRepository
 import com.opensmarthome.speaker.util.DiscoveredSpeaker
 import com.opensmarthome.speaker.util.MulticastDiscovery
 import com.opensmarthome.speaker.util.NetworkMonitor
+import com.opensmarthome.speaker.util.ThermalMonitor
 import com.opensmarthome.speaker.voice.metrics.LatencyRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +38,8 @@ class SystemInfoViewModel @Inject constructor(
     private val toolExecutor: ToolExecutor,
     private val routineDao: RoutineDao,
     private val ragRepository: RagRepository,
-    private val multicastDiscovery: MulticastDiscovery
+    private val multicastDiscovery: MulticastDiscovery,
+    private val thermalMonitor: ThermalMonitor
 ) : ViewModel() {
 
     val nearbySpeakers: StateFlow<List<DiscoveredSpeaker>> = multicastDiscovery.speakers
@@ -62,6 +64,7 @@ class SystemInfoViewModel @Inject constructor(
         val totalLatencyMeasurements: Long = 0L,
         val routineCount: Int = 0,
         val documentCount: Int = 0,
+        val thermalLevel: String = "NORMAL",
         val loading: Boolean = false
     )
 
@@ -101,6 +104,7 @@ class SystemInfoViewModel @Inject constructor(
                 totalLatencyMeasurements = measurements,
                 routineCount = routines,
                 documentCount = documents,
+                thermalLevel = thermalMonitor.status.value.name,
                 loading = false
             )
         }

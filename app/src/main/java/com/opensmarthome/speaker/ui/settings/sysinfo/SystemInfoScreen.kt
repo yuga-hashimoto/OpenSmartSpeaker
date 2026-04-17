@@ -74,6 +74,7 @@ fun SystemInfoScreen(
             add("Connectivity" to if (state.online) "Online" else "Offline")
             add("Latency budget violations" to "${state.totalBudgetViolations}")
             add("Latency measurements (lifetime)" to "${state.totalLatencyMeasurements}")
+            add("Thermal state" to state.thermalLevel)
             add("Nearby speakers (mDNS)" to if (nearby.isEmpty()) "(none)" else "${nearby.size}")
             nearby.forEach { speaker ->
                 val suffix = speaker.host?.let { host -> speaker.port?.let { " — $host:$it" } ?: " — $host" } ?: ""
