@@ -81,6 +81,8 @@ class LocaleManager @Inject constructor(
         Option("iw", "עברית"),
         Option("ja", "日本語"),
         Option("ko", "한국어"),
+        Option("lt", "Lietuvių"),
+        Option("lv", "Latviešu"),
         Option("ms", "Bahasa Melayu"),
         Option("nb", "Norsk bokmål"),
         Option("nl", "Nederlands"),
