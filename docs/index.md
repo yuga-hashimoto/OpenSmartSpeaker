@@ -4,6 +4,7 @@ Tablet-first Android smart speaker with on-device LLM agent, inspired by Alexa a
 
 ## Start here
 
+- **[State of the project](state-of-the-project.md)** — what works today, what's scaffolding, what's missing
 - **[Architecture](architecture.md)** — layer map, key abstractions
 - **[Conventions](conventions.md)** — Kotlin style, package layout, testing
 - **[Roadmap](roadmap.md)** — priority-ordered backlog
