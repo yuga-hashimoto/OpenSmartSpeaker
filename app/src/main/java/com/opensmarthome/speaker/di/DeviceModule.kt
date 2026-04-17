@@ -279,6 +279,9 @@ object DeviceModule {
                 com.opensmarthome.speaker.assistant.proactive.ForgotLightsAtBedtimeRule(
                     devicesSupplier = { deviceManager.devices.value.values }
                 ),
+                com.opensmarthome.speaker.assistant.proactive.ChargingCompleteRule(
+                    statusSupplier = { batteryMonitor.status.value }
+                ),
             )
         )
 
