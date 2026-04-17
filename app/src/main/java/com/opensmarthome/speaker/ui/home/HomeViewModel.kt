@@ -9,6 +9,8 @@ import com.opensmarthome.speaker.device.model.DeviceCommand
 import com.opensmarthome.speaker.device.model.DeviceType
 import com.opensmarthome.speaker.tool.ToolCall
 import com.opensmarthome.speaker.tool.ToolExecutor
+import com.opensmarthome.speaker.tool.info.NewsItem
+import com.opensmarthome.speaker.tool.info.WeatherInfo
 import com.opensmarthome.speaker.tool.system.TimerInfo
 import com.opensmarthome.speaker.tool.system.TimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,8 +31,24 @@ class HomeViewModel @Inject constructor(
     private val deviceManager: DeviceManager,
     private val suggestionState: SuggestionState,
     private val toolExecutor: ToolExecutor,
-    private val timerManager: TimerManager
+    private val timerManager: TimerManager,
+    private val briefingSource: OnlineBriefingSource,
 ) : ViewModel() {
+
+    companion object {
+        /** Weather API refresh cadence. Open-Meteo has no rate limit to speak of,
+         *  but refreshing a current-conditions card more often than once every
+         *  few minutes is just noise. 15 min matches Alexa's front-tile refresh. */
+        internal const val WEATHER_REFRESH_MS = 15L * 60L * 1000L
+
+        /** RSS feed refresh cadence. Most outlets update <= every 10-15 min;
+         *  25 min leaves headroom without starving the UI on breaking news. */
+        internal const val HEADLINES_REFRESH_MS = 25L * 60L * 1000L
+
+        /** Headline tile count on the Home dashboard. Keeps the UI readable
+         *  at a glance on a tablet; deeper browsing is a voice command. */
+        internal const val HEADLINES_LIMIT = 5
+    }
 
     val suggestions: StateFlow<List<Suggestion>> = suggestionState.current
 
@@ -108,6 +126,40 @@ class HomeViewModel @Inject constructor(
 
     private val _weather = MutableStateFlow<WeatherData?>(null)
     val weather: StateFlow<WeatherData?> = _weather.asStateFlow()
+
+    /**
+     * Online current-conditions briefing (Open-Meteo). Polled on the UI
+     * lifecycle — `WhileSubscribed(5_000)` pauses the loop when Home is
+     * off-screen so a tablet left on the Settings tab isn't burning mobile
+     * data. Emits nothing on network error; the previous emission stays
+     * the latest visible value.
+     */
+    val onlineWeather: StateFlow<WeatherInfo?> = flow {
+        while (true) {
+            briefingSource.currentWeather()?.let { emit(it) }
+            delay(WEATHER_REFRESH_MS)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null
+    )
+
+    /**
+     * Latest RSS headlines. Same lifecycle treatment as [onlineWeather].
+     * Emits the raw feed response; UI trims summaries for tile display.
+     */
+    val headlines: StateFlow<List<NewsItem>> = flow {
+        while (true) {
+            val items = briefingSource.latestHeadlines(HEADLINES_LIMIT)
+            if (items.isNotEmpty()) emit(items)
+            delay(HEADLINES_REFRESH_MS)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
 
     private val _deviceChips = MutableStateFlow<List<DeviceChip>>(emptyList())
     val deviceChips: StateFlow<List<DeviceChip>> = _deviceChips.asStateFlow()

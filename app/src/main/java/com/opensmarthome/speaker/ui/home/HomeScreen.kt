@@ -44,6 +44,8 @@ fun HomeScreen(
         }
     }
     val weather by viewModel.weather.collectAsState()
+    val onlineWeather by viewModel.onlineWeather.collectAsState()
+    val headlines by viewModel.headlines.collectAsState()
     val chips by viewModel.deviceChips.collectAsState()
     val nowPlaying by viewModel.nowPlaying.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
@@ -55,34 +57,52 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize().background(SpeakerBackground)
     ) {
         if (wide) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(32.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Tablet landscape: two-column top block with clock+online
+            // weather on the left and status cards on the right, plus a
+            // full-width headlines strip across the bottom. Mirrors the
+            // Alexa / Echo Show front-tile rhythm: time-first, briefing
+            // second, glanceable status third.
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1.2f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.Start
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ClockWidget(time = time)
-                    Spacer(modifier = Modifier.height(20.dp))
-                    WeatherWidget(weather = weather)
+                    Column(
+                        modifier = Modifier.weight(1.2f).fillMaxHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        ClockWidget(time = time)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        val online = onlineWeather
+                        if (online != null) {
+                            OnlineWeatherCard(weather = online)
+                        } else {
+                            WeatherWidget(weather = weather)
+                        }
+                    }
+                    Spacer(Modifier.width(24.dp))
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (activeTimers.isNotEmpty()) {
+                            ActiveTimersCard(
+                                timers = activeTimers,
+                                onCancelTimer = viewModel::onCancelTimer
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                        if (chips.isNotEmpty()) {
+                            DeviceStatusChips(chips = chips)
+                        }
+                    }
                 }
-                Spacer(Modifier.width(24.dp))
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    if (activeTimers.isNotEmpty()) {
-                        ActiveTimersCard(
-                            timers = activeTimers,
-                            onCancelTimer = viewModel::onCancelTimer
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                    if (chips.isNotEmpty()) {
-                        DeviceStatusChips(chips = chips)
-                    }
+                if (headlines.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HeadlinesCard(headlines = headlines)
                 }
             }
         } else {
@@ -93,7 +113,12 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.weight(0.2f))
                 ClockWidget(time = time)
                 Spacer(modifier = Modifier.height(28.dp))
-                WeatherWidget(weather = weather)
+                val online = onlineWeather
+                if (online != null) {
+                    OnlineWeatherCard(weather = online)
+                } else {
+                    WeatherWidget(weather = weather)
+                }
                 if (activeTimers.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(24.dp))
                     ActiveTimersCard(
@@ -104,6 +129,10 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(36.dp))
                 if (chips.isNotEmpty()) {
                     DeviceStatusChips(chips = chips)
+                }
+                if (headlines.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HeadlinesCard(headlines = headlines)
                 }
                 Spacer(modifier = Modifier.weight(1f))
             }
