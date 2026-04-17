@@ -79,6 +79,9 @@ class DefaultFastPathRouter(
             MediaControlMatcher,
             // RunRoutineMatcher must precede LaunchAppMatcher because "run X" overlaps.
             RunRoutineMatcher,
+            // SettingsMatcher must precede LaunchAppMatcher — "open wifi settings"
+            // would otherwise be eaten as a launch_app("wifi settings") call.
+            SettingsMatcher,
             LaunchAppMatcher,
             FindDeviceMatcher,
             // GoodnightMatcher must precede the GreetingMatcher's "good night"

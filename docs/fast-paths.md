@@ -25,7 +25,8 @@ to the list.
 | `LightsMatcher` | "lights on", "電気つけて", "dim the lights", "set brightness 50", "明るさ80%", "bedroom lights off" | `execute_command` device_type=light | Room-scoped variants supported |
 | `MediaControlMatcher` | "pause music", "next track", "再生して", "前の曲" | `execute_command` device_type=media_player | |
 | `RunRoutineMatcher` | "run X routine", "Xルーチンを実行" | `run_routine` | Requires explicit "routine"/"ルーチン" keyword |
-| `LaunchAppMatcher` | "open camera", "launch maps", "Chromeを開いて" | `launch_app` | Skips light/timer keywords |
+| `SettingsMatcher` | "open wifi settings", "bluetooth settings", "brightness settings", "app list", "Wi-Fiの設定", "明るさ", "音量", "アクセシビリティ", "設定を開いて" | `open_settings_page` | Must precede LaunchAppMatcher so "open wifi settings" isn't launched as an app |
+| `LaunchAppMatcher` | "open camera", "launch maps", "Chromeを開いて" | `launch_app` | Skips light/timer/settings keywords |
 | `FindDeviceMatcher` | "find my tablet", "デバイスを探して" | `find_device` | Rings + vibrates 10s |
 | `GoodnightMatcher` | "goodnight", "I'm going to bed", "おやすみ", "寝ます" | `goodnight` (composite) | Lights off + media pause + cancel timers |
 | `ArriveHomeMatcher` | "I'm home", "ただいま" | `arrive_home` (composite) | Lights on + volume 50 |

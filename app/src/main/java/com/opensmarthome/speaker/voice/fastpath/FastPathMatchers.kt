@@ -583,6 +583,65 @@ object RunRoutineMatcher : FastPathMatcher {
     }
 }
 
+/**
+ * Deep-links into system Settings screens: "open wifi settings", "bluetooth
+ * settings", "brightness settings", "Wi-Fiの設定", "明るさ", "音量", "設定を開いて" …
+ * → `open_settings_page` with a `page` slug matching
+ * [com.opensmarthome.speaker.tool.system.OpenSettingsToolExecutor] enum.
+ *
+ * Must sit BEFORE [LaunchAppMatcher] — otherwise utterances like "open wifi
+ * settings" fall through to launch_app and try to start a non-existent
+ * "wifi settings" app.
+ */
+object SettingsMatcher : FastPathMatcher {
+    private data class Rule(val regex: Regex, val slug: String, val spoken: String)
+
+    private val rules = listOf(
+        // English — order matters: most specific first so "open settings" doesn't
+        // swallow "open wifi settings".
+        Rule(Regex("""\bopen\s+wi-?fi\s+settings\b"""), "wifi", "Opening Wi-Fi settings."),
+        Rule(Regex("""\bwi-?fi\s+settings\b"""), "wifi", "Opening Wi-Fi settings."),
+        Rule(Regex("""\b(?:open\s+)?bluetooth\s+settings\b"""), "bluetooth", "Opening Bluetooth settings."),
+        Rule(Regex("""\bbrightness\s+settings\b"""), "brightness", "Opening display settings."),
+        Rule(Regex("""\bdisplay\s+settings\b"""), "display", "Opening display settings."),
+        Rule(Regex("""\bsound\s+settings\b"""), "sound", "Opening sound settings."),
+        Rule(Regex("""\bvolume\s+settings\b"""), "volume", "Opening sound settings."),
+        Rule(Regex("""\baccessibility\s+settings\b"""), "accessibility", "Opening accessibility settings."),
+        Rule(Regex("""\bnotification\s+settings\b"""), "notifications", "Opening notification settings."),
+        Rule(Regex("""\bapp\s+(?:settings|list)\b"""), "apps", "Opening app settings."),
+        Rule(Regex("""\bbattery\s+(?:saver\s+)?settings\b"""), "battery", "Opening battery settings."),
+        // "settings" / "open settings" / "system settings" — catch-all last.
+        Rule(Regex("""^\s*(?:open\s+|system\s+)?settings\s*[!?.]*\s*$"""), "home", "Opening settings."),
+        // Japanese
+        Rule(Regex("""wi-?fi\s*の?\s*設定"""), "wifi", "Wi-Fi設定を開きます。"),
+        Rule(Regex("""(?:ブルートゥース|ブルートゥ|ブルー\s*トゥース)\s*の?\s*設定"""), "bluetooth", "Bluetooth設定を開きます。"),
+        Rule(Regex("""明るさ(?:\s*の?\s*設定)?"""), "brightness", "明るさの設定を開きます。"),
+        Rule(Regex("""音量(?:\s*の?\s*設定)?"""), "volume", "音量の設定を開きます。"),
+        Rule(Regex("""アクセシビリティ(?:\s*の?\s*設定)?"""), "accessibility", "アクセシビリティ設定を開きます。"),
+        Rule(Regex("""通知\s*の?\s*設定"""), "notifications", "通知設定を開きます。"),
+        Rule(Regex("""アプリ\s*の?\s*設定"""), "apps", "アプリ設定を開きます。"),
+        Rule(Regex("""バッテリー\s*の?\s*設定"""), "battery", "バッテリー設定を開きます。"),
+        Rule(
+            Regex("""^\s*(?:システム\s*)?設定(?:を)?\s*(?:開いて|ひらいて)?\s*[!?.]*\s*$"""),
+            "home",
+            "設定を開きました。"
+        )
+    )
+
+    override fun tryMatch(normalized: String): FastPathMatch? {
+        for (rule in rules) {
+            if (rule.regex.containsMatchIn(normalized)) {
+                return FastPathMatch(
+                    toolName = "open_settings_page",
+                    arguments = mapOf("page" to rule.slug),
+                    spokenConfirmation = rule.spoken
+                )
+            }
+        }
+        return null
+    }
+}
+
 /** "open X" / "launch X" / "Xを開いて" — forwards to launch_app. */
 object LaunchAppMatcher : FastPathMatcher {
     private val englishRegex = Regex("""(?:open|launch|start|run)\s+(?:the\s+)?(.+?)(?:\s+app)?\s*[!?.]*\s*$""")
@@ -603,7 +662,10 @@ object LaunchAppMatcher : FastPathMatcher {
         "thermostat", "ac", "air conditioner",
         "fan", "tv", "television",
         "speaker", "music", "playlist",
-        "oven", "microwave"
+        "oven", "microwave",
+        // settings deep-links are owned by SettingsMatcher; guard so an
+        // unmatched "open wifi settings" doesn't accidentally launch_app.
+        "settings", "wifi", "wi-fi", "bluetooth", "brightness"
     )
     private val japaneseReservedSubstrings = listOf(
         "ドア", "扉", "玄関",
