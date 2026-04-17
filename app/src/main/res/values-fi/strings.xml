@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenSmartSpeaker</string>
+    <string name="tab_chat">Keskustelu</string>
+    <string name="tab_dashboard">Kojelauta</string>
+    <string name="tab_ambient">Tunnelma</string>
+    <string name="tab_settings">Asetukset</string>
+    <string name="accessibility_service_description">Antaa älykaiuttimen agentin lukea näytöllä näkyvän tekstin ja automatisoida käyttöliittymän toimintoja puolestasi.</string>
+    <string name="accessibility_service_summary">Ota käyttöön, jotta laitteessa toimiva agentti voi nähdä ja hallita näyttöä.</string>
+    <string name="a11y_service_description">OpenSmartSpeaker käyttää tätä esteettömyyspalvelua lukeakseen näytön sisällön ja napauttaakseen painikkeita puolestasi pyynnöstäsi. Mitään tietoja ei lähetetä laitteen ulkopuolelle. Voit poistaa sen käytöstä milloin tahansa asetuksista.</string>
+    <string name="voice_tile_label">Puhu</string>
+    <string name="voice_tile_content_description">Aloita äänikeskustelu OpenSmartSpeakerin kanssa</string>
+</resources>
