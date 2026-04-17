@@ -64,6 +64,7 @@ import com.opensmarthome.speaker.tool.system.CameraToolExecutor
 import com.opensmarthome.speaker.tool.system.ContactsToolExecutor
 import com.opensmarthome.speaker.tool.system.DeviceHealthToolExecutor
 import com.opensmarthome.speaker.tool.system.LocationToolExecutor
+import com.opensmarthome.speaker.tool.system.NotificationReplyToolExecutor
 import com.opensmarthome.speaker.tool.system.NotificationToolExecutor
 import com.opensmarthome.speaker.tool.system.PhotosToolExecutor
 import com.opensmarthome.speaker.tool.system.ScreenRecorderHolder
@@ -316,6 +317,7 @@ object DeviceModule {
             ),
             KnowledgeToolExecutor(InMemoryKnowledgeStore()),
             NotificationToolExecutor(notificationProvider),
+            NotificationReplyToolExecutor(notificationProvider),
             CalendarToolExecutor(
                 AndroidCalendarProvider(context)
             ),
