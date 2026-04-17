@@ -19,9 +19,21 @@ interface TimerManager {
     }
 }
 
+/**
+ * Describes a pending or currently-firing timer.
+ *
+ * A timer lives through two phases:
+ *  - counting down: [remainingSeconds] > 0, [isFiring] = false
+ *  - firing / alarm ringing: [remainingSeconds] = 0, [isFiring] = true
+ *
+ * A firing timer stays in [TimerManager.getActiveTimers] until the user (or
+ * voice / safety timeout) cancels it, so the UI and the voice cancel paths
+ * both have a target to act on.
+ */
 data class TimerInfo(
     val id: String,
     val label: String,
     val remainingSeconds: Int,
-    val totalSeconds: Int
+    val totalSeconds: Int,
+    val isFiring: Boolean = false
 )
