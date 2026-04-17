@@ -60,6 +60,9 @@ analytics per call.
 | `start_screen_recording` / `stop_screen_recording` | ScreenRecorderToolExecutor | MediaProjection |
 | `read_screen` | ScreenToolExecutor | Needs Accessibility service |
 | `read_active_screen` | ReadActiveScreenToolExecutor | Markdown dump of foreground window via new-style A11y service (P15.2) |
+| `tap_by_text` | TapByTextToolExecutor | `{ text }` — taps clickable node whose text/desc contains query via GestureDescription (P15.3) |
+| `scroll_screen` | ScrollScreenToolExecutor | `{ direction }` — up/down/left/right swipe across window centre (P15.4) |
+| `type_text` | TypeTextToolExecutor | `{ text }` — ACTION_SET_TEXT on focused input; clipboard paste fallback (P15.5) |
 
 ## Agent memory
 
