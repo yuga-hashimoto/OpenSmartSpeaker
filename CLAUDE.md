@@ -69,6 +69,9 @@ Every PR that steals from one of these should say "stolen from X" in the commit 
 - Sealed classes for state and result types
 - Package-per-feature, filename = primary class name
 - Test files: `{ClassName}Test.kt` in `app/src/test/`
+- UI strings live in `app/src/main/res/values*/strings.xml` — when adding a
+  string, add it to every shipped locale in the same PR. See
+  [docs/i18n.md](docs/i18n.md).
 
 Details: [docs/conventions.md](docs/conventions.md)
 
