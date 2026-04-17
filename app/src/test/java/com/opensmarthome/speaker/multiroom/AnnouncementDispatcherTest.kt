@@ -3,6 +3,8 @@ package com.opensmarthome.speaker.multiroom
 import com.google.common.truth.Truth.assertThat
 import com.opensmarthome.speaker.assistant.model.AssistantMessage
 import com.opensmarthome.speaker.assistant.session.ConversationHistoryManager
+import com.opensmarthome.speaker.tool.system.TimerManager
+import com.opensmarthome.speaker.tool.system.TimerInfo
 import com.opensmarthome.speaker.voice.tts.TextToSpeech
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,13 +23,28 @@ class AnnouncementDispatcherTest {
     private fun dispatcher(
         tts: TextToSpeech = stubTts(),
         history: ConversationHistoryManager? = null,
+        timerManager: TimerManager? = null,
         announcementState: AnnouncementState? = null
     ): AnnouncementDispatcher =
         AnnouncementDispatcher(
             tts = tts,
             historyProvider = { history },
+            timerManagerProvider = { timerManager },
             announcementState = announcementState
         )
+
+    private fun recordingTimerManager(): Pair<TimerManager, MutableList<Pair<Int, String>>> {
+        val calls = mutableListOf<Pair<Int, String>>()
+        val tm = object : TimerManager {
+            override suspend fun setTimer(seconds: Int, label: String): String {
+                calls.add(seconds to label)
+                return "tid-${calls.size}"
+            }
+            override suspend fun cancelTimer(timerId: String): Boolean = true
+            override suspend fun getActiveTimers(): List<TimerInfo> = emptyList()
+        }
+        return tm to calls
+    }
 
     private fun stubTts(): TextToSpeech {
         val tts = mockk<TextToSpeech>(relaxed = true)
@@ -225,5 +242,59 @@ class AnnouncementDispatcherTest {
         assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Announcement::class.java)
         advanceUntilIdle()
         coVerify(atLeast = 1) { tts.speak("hi") }
+    }
+
+    @Test
+    fun `start_timer with valid seconds returns TimerStarted with seconds and label`() = runTest {
+        val (tm, _) = recordingTimerManager()
+        val r = dispatcher(timerManager = tm).dispatch(
+            envelope("start_timer", mapOf("seconds" to 300.0, "label" to "tea"))
+        )
+        assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.TimerStarted::class.java)
+        val out = r as AnnouncementDispatcher.DispatchOutcome.TimerStarted
+        assertThat(out.seconds).isEqualTo(300)
+        assertThat(out.label).isEqualTo("tea")
+    }
+
+    @Test
+    fun `start_timer accepts integer seconds without label`() = runTest {
+        val (tm, _) = recordingTimerManager()
+        val r = dispatcher(timerManager = tm).dispatch(envelope("start_timer", mapOf("seconds" to 60)))
+        assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.TimerStarted::class.java)
+        val out = r as AnnouncementDispatcher.DispatchOutcome.TimerStarted
+        assertThat(out.seconds).isEqualTo(60)
+        assertThat(out.label).isNull()
+    }
+
+    @Test
+    fun `start_timer missing seconds is rejected`() {
+        val (tm, _) = recordingTimerManager()
+        val r = dispatcher(timerManager = tm).dispatch(envelope("start_timer", emptyMap()))
+        assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Rejected::class.java)
+    }
+
+    @Test
+    fun `start_timer with zero or negative seconds is rejected`() {
+        val (tm, _) = recordingTimerManager()
+        val d = dispatcher(timerManager = tm)
+        assertThat(d.dispatch(envelope("start_timer", mapOf("seconds" to 0))))
+            .isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Rejected::class.java)
+        assertThat(d.dispatch(envelope("start_timer", mapOf("seconds" to -5))))
+            .isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Rejected::class.java)
+    }
+
+    @Test
+    fun `start_timer with seconds exceeding 24h cap is rejected`() {
+        val (tm, _) = recordingTimerManager()
+        val r = dispatcher(timerManager = tm)
+            .dispatch(envelope("start_timer", mapOf("seconds" to 86_401)))
+        assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Rejected::class.java)
+    }
+
+    @Test
+    fun `start_timer without TimerManager wired is rejected gracefully`() {
+        val r = dispatcher(timerManager = null)
+            .dispatch(envelope("start_timer", mapOf("seconds" to 60)))
+        assertThat(r).isInstanceOf(AnnouncementDispatcher.DispatchOutcome.Rejected::class.java)
     }
 }
