@@ -60,16 +60,31 @@ class LocaleManager @Inject constructor(
     val options: List<Option> = listOf(
         Option("", "System default"),
         Option("en", "English"),
-        Option("ja", "日本語"),
-        Option("es", "Español"),
-        Option("fr", "Français"),
+        Option("ar", "العربية"),
+        Option("cs", "Čeština"),
         Option("de", "Deutsch"),
-        Option("zh-CN", "简体中文"),
+        Option("el", "Ελληνικά"),
+        Option("es", "Español"),
+        Option("fi", "Suomi"),
+        Option("fr", "Français"),
         Option("hi", "हिन्दी"),
+        Option("in", "Bahasa Indonesia"),
         Option("it", "Italiano"),
+        Option("iw", "עברית"),
+        Option("ja", "日本語"),
         Option("ko", "한국어"),
+        Option("nb", "Norsk bokmål"),
+        Option("nl", "Nederlands"),
+        Option("pl", "Polski"),
         Option("pt-BR", "Português (Brasil)"),
-        Option("ru", "Русский")
+        Option("ru", "Русский"),
+        Option("sv", "Svenska"),
+        Option("th", "ไทย"),
+        Option("tr", "Türkçe"),
+        Option("uk", "Українська"),
+        Option("vi", "Tiếng Việt"),
+        Option("zh-CN", "简体中文"),
+        Option("zh-TW", "繁體中文")
     )
 
     /**
