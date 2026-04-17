@@ -25,20 +25,24 @@ class LocaleManagerTest {
      * assert its shape directly here rather than instantiating the
      * manager — that mirror keeps the regression surface narrow.
      */
-    private val expectedTags =
-        listOf("", "en", "ja", "es", "fr", "de", "zh-CN", "hi", "it", "ko", "pt-BR", "ru")
+    private val expectedTags = listOf(
+        "", "en", "ar", "cs", "de", "el", "es", "fi", "fr", "hi", "in",
+        "it", "iw", "ja", "ko", "nb", "nl", "pl", "pt-BR", "ru", "sv",
+        "th", "tr", "uk", "vi", "zh-CN", "zh-TW"
+    )
 
     @Test
     fun `bundled options list covers every locale resource dir we ship`() {
-        // The app ships values/ (default EN), values-ja, values-es,
-        // values-fr, values-de, values-zh-rCN, values-hi, values-it,
-        // values-ko, values-pt-rBR, values-ru. Each of those needs a
-        // Picker entry; system-default plus explicit en rounds out the
-        // list. This test is the single source of truth for that
-        // mapping.
-        assertThat(expectedTags)
-            .containsExactly("", "en", "ja", "es", "fr", "de", "zh-CN", "hi", "it", "ko", "pt-BR", "ru")
-            .inOrder()
+        // Each entry maps to a values-<tag>/ directory in the app, plus
+        // the system-default empty tag and the explicit en entry. When
+        // a new translation lands, both this list and
+        // LocaleManager.options must be updated in the same PR so the
+        // picker never points at a resource that doesn't exist.
+        assertThat(expectedTags).containsExactly(
+            "", "en", "ar", "cs", "de", "el", "es", "fi", "fr", "hi", "in",
+            "it", "iw", "ja", "ko", "nb", "nl", "pl", "pt-BR", "ru", "sv",
+            "th", "tr", "uk", "vi", "zh-CN", "zh-TW"
+        ).inOrder()
     }
 
     @Test
