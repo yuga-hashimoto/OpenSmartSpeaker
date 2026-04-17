@@ -54,6 +54,7 @@ analytics per call.
 | `search_contacts` / `list_contacts` | ContactsToolExecutor | Needs READ_CONTACTS |
 | `get_location` | LocationToolExecutor | Needs ACCESS_COARSE_LOCATION |
 | `list_notifications` / `clear_notifications` | NotificationToolExecutor | Needs Notification Listener |
+| `reply_to_notification` | NotificationReplyToolExecutor | Sends text reply via `RemoteInput` on the notification's reply action (LINE, Messenger, SMS, ...). `{ key, text }`. Fails gracefully when the notification exposes no reply action. |
 | `get_calendar_events` | CalendarToolExecutor | Needs READ_CALENDAR |
 | `list_recent_photos` | PhotosToolExecutor | Needs READ_MEDIA_IMAGES |
 | `take_photo` | CameraToolExecutor | Uses IntentCameraProvider (real capture) |
