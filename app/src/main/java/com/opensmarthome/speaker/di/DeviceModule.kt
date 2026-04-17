@@ -372,6 +372,34 @@ object DeviceModule {
 
     @Provides
     @Singleton
+    fun provideWeatherProvider(
+        client: OkHttpClient,
+        moshi: Moshi
+    ): com.opensmarthome.speaker.tool.info.WeatherProvider =
+        com.opensmarthome.speaker.tool.info.OpenMeteoWeatherProvider(client, moshi)
+
+    @Provides
+    @Singleton
+    fun provideNewsProvider(
+        client: OkHttpClient
+    ): com.opensmarthome.speaker.tool.info.NewsProvider =
+        com.opensmarthome.speaker.tool.info.RssNewsProvider(client)
+
+    @Provides
+    @Singleton
+    fun provideOnlineBriefingSource(
+        weatherProvider: com.opensmarthome.speaker.tool.info.WeatherProvider,
+        newsProvider: com.opensmarthome.speaker.tool.info.NewsProvider,
+        appPreferences: AppPreferences,
+    ): com.opensmarthome.speaker.ui.home.OnlineBriefingSource =
+        com.opensmarthome.speaker.ui.home.DefaultOnlineBriefingSource(
+            weatherProvider,
+            newsProvider,
+            appPreferences,
+        )
+
+    @Provides
+    @Singleton
     fun provideToolExecutor(
         deviceManager: DeviceManager,
         moshi: Moshi,
