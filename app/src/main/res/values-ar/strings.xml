@@ -100,6 +100,29 @@
     <string name="briefing_retry">إعادة المحاولة</string>
 
     <!-- Common buttons -->
+    <string name="common_save">Save</string>
+
+    <!-- System prompt screen -->
+    <string name="system_prompt_title">Agent personality</string>
+    <string name="system_prompt_description">Customize the agent\'s system prompt. This is baked into every conversation and shapes tone and behavior.</string>
+    <string name="system_prompt_label_default">Default prompt (editable)</string>
+    <string name="system_prompt_label_custom">Custom prompt</string>
+    <string name="system_prompt_saved_message">Saved. Restart a conversation to pick up the change.</string>
+    <string name="system_prompt_reset">Reset to default</string>
+
+    <!-- Documents screen -->
+    <string name="documents_title">Documents</string>
+    <string name="documents_teach_title">Teach the agent a document</string>
+    <string name="documents_title_field">Title</string>
+    <string name="documents_content_field">Content (paste text, notes, article)</string>
+    <string name="documents_ingesting">Ingesting\u2026</string>
+    <string name="documents_ingest_button">Ingest</string>
+    <string name="documents_empty">No documents yet.</string>
+    <string name="documents_stored_count">%1$d documents stored</string>
+    <string name="documents_chunks_count">%1$d chunks</string>
+    <string name="documents_error_title_content_required">Title and content are required</string>
+    <string name="documents_added_message">Added \'%1$s\'</string>
+    <string name="documents_error_ingest_failed">Ingest failed: %1$s</string>
     <string name="common_cancel">Cancel</string>
 
     <!-- Skills screen -->
