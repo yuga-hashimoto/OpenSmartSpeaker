@@ -37,11 +37,12 @@ class ToolResultSummarizer {
         if (rawData.isBlank()) return EMPTY_MARKER
 
         // Pre-truncate before running the regex-based formatter. Regex
-        // backtracking on 10k+ character single-quoted strings can trigger
-        // a StackOverflowError; the formatter only needs a few hundred
-        // chars of structured JSON to extract the fields we care about.
+        // backtracking on unterminated JSON string literals can trigger
+        // a StackOverflowError on Linux JVMs with small default stacks.
+        // We append `"}` after truncation so the regex engine always finds
+        // a closing quote, preventing catastrophic backtracking.
         val safeData = if (rawData.length > FORMATTER_INPUT_CAP) {
-            rawData.substring(0, FORMATTER_INPUT_CAP)
+            rawData.substring(0, FORMATTER_INPUT_CAP) + "\"}"
         } else {
             rawData
         }
@@ -78,13 +79,16 @@ class ToolResultSummarizer {
 
         /**
          * Hard cap on the input we feed to [FastPathResultFormatter]'s
-         * regex-based field extractors. Above any realistic tool payload
-         * (a `web_search` result is typically ≤ 2kB) but small enough
-         * that a pathological abstract/related payload cannot trigger
-         * catastrophic regex backtracking / `StackOverflowError` in the
-         * `"key":"((?:\\.|[^"\\])*)"` matcher.
+         * regex-based field extractors. Kept deliberately small (500 chars)
+         * so that even a pathological `abstract` value of thousands of
+         * characters cannot trigger catastrophic regex backtracking /
+         * `StackOverflowError` in the `"key":"((?:\\.|[^"\\])*)"` matcher.
+         * Linux CI JVMs have a smaller default thread stack than macOS,
+         * making them susceptible at values that appear safe locally.
+         * All real-world `web_search` / `get_weather` payloads that matter
+         * (key + a 1-2 sentence abstract) fit comfortably within 500 chars.
          */
-        private const val FORMATTER_INPUT_CAP = 2_000
+        private const val FORMATTER_INPUT_CAP = 500
 
         private const val ELLIPSIS = "…"
 
