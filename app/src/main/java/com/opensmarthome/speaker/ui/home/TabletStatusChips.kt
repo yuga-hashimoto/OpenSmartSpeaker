@@ -9,12 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Battery1Bar
-import androidx.compose.material.icons.filled.Battery3Bar
-import androidx.compose.material.icons.filled.Battery5Bar
-import androidx.compose.material.icons.filled.BatteryChargingFull
-import androidx.compose.material.icons.filled.BatteryFull
-import androidx.compose.material.icons.filled.BatteryStd
 import androidx.compose.material.icons.filled.DeviceThermostat
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.WbSunny
@@ -30,14 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.opensmarthome.speaker.ui.theme.SpeakerSurfaceVariant
 import com.opensmarthome.speaker.ui.theme.SpeakerTextPrimary
 import com.opensmarthome.speaker.ui.theme.SpeakerTextSecondary
-import com.opensmarthome.speaker.util.BatteryStatus
 import com.opensmarthome.speaker.util.ThermalLevel
 
 /**
- * Persistent tablet-self status strip: battery level + charging state,
- * thermal throttle badge. Shown top-right of the Home dashboard so
- * users always see that the device is healthy (or not) — same vibe as
- * the status icons on an Echo Show's status bar.
+ * Persistent tablet-self status strip: thermal throttle badge.
+ * Shown top-right of the Home dashboard. Battery chip was removed
+ * because it overlapped with the settings gear icon — the system
+ * status bar already shows charge level on every Android tablet.
  *
  * Thermal chip only renders when the device is actually throttling;
  * keeping it hidden in the common-case NORMAL state avoids a permanent
@@ -45,42 +38,17 @@ import com.opensmarthome.speaker.util.ThermalLevel
  */
 @Composable
 fun TabletStatusChips(
-    battery: BatteryStatus,
     thermal: ThermalLevel,
     modifier: Modifier = Modifier,
 ) {
+    if (!thermal.shouldThrottle) return
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BatteryChip(battery)
-        if (thermal.shouldThrottle) {
-            ThermalChip(thermal)
-        }
+        ThermalChip(thermal)
     }
-}
-
-@Composable
-private fun BatteryChip(battery: BatteryStatus) {
-    val icon = when {
-        battery.isCharging -> Icons.Filled.BatteryChargingFull
-        battery.level >= 90 -> Icons.Filled.BatteryFull
-        battery.level >= 60 -> Icons.Filled.Battery5Bar
-        battery.level >= 30 -> Icons.Filled.Battery3Bar
-        battery.level >= 10 -> Icons.Filled.Battery1Bar
-        else -> Icons.Filled.BatteryStd
-    }
-    val tint = when {
-        battery.isLow -> Color(0xFFE57373) // soft red
-        battery.isCharging -> Color(0xFF81C784) // soft green
-        else -> SpeakerTextSecondary
-    }
-    StatusChip(
-        icon = icon,
-        tint = tint,
-        label = "${battery.level}%",
-    )
 }
 
 @Composable

@@ -10,9 +10,9 @@ front tile: time-first, briefing second, glanceable status third.
 
 ```
 ┌────────────────────────────────────┐  ┌──────────────────┐
-│                                    │  │ battery + thermal│ ← TabletStatusChips
-│  Greeting (time-of-day)            │  │ chip strip       │    (top-right)
-│  ┌──────────────────────┐          │  │                  │
+│                                    │  │ thermal chip     │ ← TabletStatusChips
+│  Greeting (time-of-day)            │  │ (only when WARM/ │    (top-right, only
+│  ┌──────────────────────┐          │  │  HOT)            │     when throttling)
 │  │       18:42          │          │  ├──────────────────┤
 │  │  Friday, April 17    │          │  │ NextEventCard    │
 │  └──────────────────────┘          │  │ 19:00 Dinner     │
@@ -47,7 +47,7 @@ similar intervals.
 | `nextEvent`              | 5 min     | `UpcomingEventSource` → `CalendarProvider`    |
 | `onlineWeather`          | 15 min    | `OnlineBriefingSource` → `WeatherProvider`    |
 | `headlines`              | 25 min    | `OnlineBriefingSource` → `NewsProvider`       |
-| `batteryStatus`          | push      | `BatteryMonitor` BroadcastReceiver            |
+| `batteryStatus`          | push      | `BatteryMonitor` BroadcastReceiver (consumed by suggestion rules, not the dashboard) |
 | `thermalLevel`           | push      | `ThermalMonitor` `OnThermalStatusChangedListener` |
 | `weather` (sensor-based) | push      | `DeviceManager.devices` (HA sensors)          |
 | `deviceChips`            | push      | `DeviceManager.devices`                       |
@@ -75,9 +75,11 @@ similar intervals.
 - **`ActiveTimersCard`** — live mm:ss countdown for every running timer.
 - **`DeviceStatusChips`** — HA-device chips: lights on, climate,
   playing media.
-- **`TabletStatusChips`** — tablet-self status: battery % + thermal
-  throttle. Thermal chip only renders in WARM/HOT state so the warning
-  has signal when it appears.
+- **`TabletStatusChips`** — tablet-self thermal-throttle badge. Renders
+  nothing in NORMAL state and only appears in WARM/HOT so the warning
+  has signal when it shows. (Battery % was previously displayed here
+  but was removed — it overlapped with the settings gear icon and the
+  Android system status bar already shows charge state.)
 - **`NowPlayingBar`** — media control surface: play/pause/next/prev +
   volume + shuffle + repeat + source picker.
 - **`SuggestionBubble`** — one proactive suggestion at a time (top).

@@ -51,7 +51,6 @@ fun HomeScreen(
     val nowPlaying by viewModel.nowPlaying.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val activeTimers by viewModel.activeTimers.collectAsState()
-    val battery by viewModel.batteryStatus.collectAsState()
     val thermal by viewModel.thermalLevel.collectAsState()
     val nextEvent by viewModel.nextEvent.collectAsState()
 
@@ -183,15 +182,14 @@ fun HomeScreen(
             )
         }
 
-        // Top-right: persistent tablet-self health strip (battery +
-        // thermal throttle badge). Kept to a single row so it never
-        // competes with the primary clock/weather for attention.
+        // Top-right (offset to avoid the settings gear): thermal throttle
+        // badge only. Renders nothing in the common-case NORMAL state.
+        // Battery chip was removed because it overlapped with the gear.
         TabletStatusChips(
-            battery = battery,
             thermal = thermal,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp)
+                .padding(top = 16.dp, end = 64.dp)
         )
 
         // Top: most recent proactive suggestion (one at a time so it doesn't
