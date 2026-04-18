@@ -79,7 +79,6 @@
 
     <!-- Common buttons -->
     <string name="common_cancel">キャンセル</string>
-    <string name="common_back">戻る</string>
 
     <!-- Skills screen -->
     <string name="skills_title">スキル</string>

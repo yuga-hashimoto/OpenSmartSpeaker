@@ -78,7 +78,6 @@
 
     <!-- Common buttons -->
     <string name="common_cancel">Cancel</string>
-    <string name="common_back">Back</string>
 
     <!-- Skills screen -->
     <string name="skills_title">Skills</string>
