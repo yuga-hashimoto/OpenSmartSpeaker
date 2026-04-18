@@ -55,4 +55,31 @@
     <string name="briefing_error_parse">ソースから予期しない応答が返されました。</string>
     <string name="briefing_error_unknown">問題が発生しました。もう一度お試しください。</string>
     <string name="briefing_retry">再試行</string>
+
+    <!-- Common buttons -->
+    <string name="common_back">戻る</string>
+    <string name="common_save">保存</string>
+    <string name="common_delete">削除</string>
+
+    <!-- System prompt screen -->
+    <string name="system_prompt_title">エージェントのパーソナリティ</string>
+    <string name="system_prompt_description">エージェントのシステムプロンプトをカスタマイズします。すべての会話に組み込まれ、トーンと動作を決定します。</string>
+    <string name="system_prompt_label_default">デフォルトのプロンプト (編集可能)</string>
+    <string name="system_prompt_label_custom">カスタムプロンプト</string>
+    <string name="system_prompt_saved_message">保存しました。変更を反映するには会話を開始し直してください。</string>
+    <string name="system_prompt_reset">デフォルトに戻す</string>
+
+    <!-- Documents screen -->
+    <string name="documents_title">ドキュメント</string>
+    <string name="documents_teach_title">エージェントにドキュメントを教える</string>
+    <string name="documents_title_field">タイトル</string>
+    <string name="documents_content_field">本文（テキスト、メモ、記事を貼り付け）</string>
+    <string name="documents_ingesting">取り込み中\u2026</string>
+    <string name="documents_ingest_button">取り込み</string>
+    <string name="documents_empty">ドキュメントはまだありません。</string>
+    <string name="documents_stored_count">%1$d 件のドキュメントを保存済み</string>
+    <string name="documents_chunks_count">%1$d チャンク</string>
+    <string name="documents_error_title_content_required">タイトルと本文が必要です</string>
+    <string name="documents_added_message">「%1$s」を追加しました</string>
+    <string name="documents_error_ingest_failed">取り込みに失敗しました: %1$s</string>
 </resources>
