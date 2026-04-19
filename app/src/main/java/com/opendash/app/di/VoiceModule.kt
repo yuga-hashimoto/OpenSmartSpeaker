@@ -10,8 +10,6 @@ import com.opendash.app.voice.fastpath.FastPathRouter
 import com.opendash.app.voice.metrics.LatencyRecorder
 import com.opendash.app.voice.pipeline.FastPathLlmPolisher
 import com.opendash.app.voice.pipeline.VoicePipeline
-import com.opendash.app.voice.stt.AndroidSttProvider
-import com.opendash.app.voice.stt.DelegatingSttProvider
 import com.opendash.app.voice.stt.SpeechToText
 import com.opendash.app.voice.tts.TextToSpeech
 import com.squareup.moshi.Moshi
@@ -26,16 +24,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object VoiceModule {
 
-    @Provides
-    @Singleton
-    fun provideSpeechToText(
-        @ApplicationContext context: Context,
-        preferences: AppPreferences
-    ): SpeechToText = DelegatingSttProvider(
-        preferences = preferences,
-        android = AndroidSttProvider(context)
-    )
-
+    // provideSpeechToText moved to SttModule so @TestInstallIn can swap STT
+    // independently of the rest of the voice graph.
     // provideTextToSpeech moved to TtsModule so @TestInstallIn can swap the
     // TTS implementation independently of the rest of the voice graph.
 
