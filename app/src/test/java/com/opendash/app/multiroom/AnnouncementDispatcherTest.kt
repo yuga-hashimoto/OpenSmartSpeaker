@@ -9,7 +9,10 @@ import com.opendash.app.voice.tts.TextToSpeech
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -27,7 +30,13 @@ class AnnouncementDispatcherTest {
         announcementState: AnnouncementState? = null,
         onHeartbeat: (AnnouncementEnvelope) -> Unit = {},
         trafficRecorder: MultiroomTrafficRecorder? = null,
-        clock: () -> Long = { 1_000L }
+        clock: () -> Long = { 1_000L },
+        // Unconfined so `scope.launch { tts.speak(...) }` runs inline on
+        // the test thread — no race between advanceUntilIdle and the
+        // real Dispatchers.Default thread pool (was the root cause of
+        // the CI-flaky `announcement without announcementState ...`
+        // test). Production DI keeps Dispatchers.Default.
+        scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
     ): AnnouncementDispatcher =
         AnnouncementDispatcher(
             tts = tts,
@@ -36,7 +45,8 @@ class AnnouncementDispatcherTest {
             announcementState = announcementState,
             onHeartbeat = onHeartbeat,
             trafficRecorder = trafficRecorder,
-            clock = clock
+            clock = clock,
+            scope = scope
         )
 
     private fun recordingTimerManager(): Pair<TimerManager, MutableList<Pair<Int, String>>> {
