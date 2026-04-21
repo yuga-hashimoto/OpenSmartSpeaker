@@ -1,5 +1,6 @@
 package com.opendash.app.ui.ambient
 
+import com.opendash.app.util.SaverReason
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,8 +40,17 @@ data class AmbientSnapshot(
      */
     val announcementText: String? = null,
     /** mDNS service name of the speaker that sent the active announcement, if any. */
-    val announcementFrom: String? = null
+    val announcementFrom: String? = null,
+    /**
+     * P14.8 saver indicator. [SaverReason.NONE] means the saver isn't
+     * throttling anything right now; `BATTERY_LOW` or `THERMAL_THROTTLE`
+     * tells the UI why wake-word and other background work are paused so
+     * the chip can show an honest reason.
+     */
+    val saverReason: SaverReason = SaverReason.NONE
 ) {
+    val saverActive: Boolean get() = saverReason != SaverReason.NONE
+
     data class DeviceLine(val name: String, val state: String)
 
     fun formattedTime(locale: Locale = Locale.getDefault()): String =

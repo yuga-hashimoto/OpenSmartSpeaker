@@ -12,6 +12,9 @@ import com.opendash.app.util.BatteryMonitor
 import com.opendash.app.util.BatteryStatus
 import com.opendash.app.util.DiscoveredSpeaker
 import com.opendash.app.util.MulticastDiscovery
+import com.opendash.app.util.SaverReason
+import com.opendash.app.util.SaverState
+import com.opendash.app.util.SaverStateProvider
 import com.opendash.app.util.ThermalLevel
 import com.opendash.app.util.ThermalMonitor
 import io.mockk.coVerify
@@ -53,6 +56,12 @@ class AmbientViewModelTest {
      * Builds a TimerManager mock that reports no active timers. Every test
      * gets its own so `coEvery` stubs don't leak across cases.
      */
+    private fun stubSaverProvider(): SaverStateProvider {
+        val provider = mockk<SaverStateProvider>()
+        every { provider.state } returns MutableStateFlow(SaverState())
+        return provider
+    }
+
     private fun emptyTimerManager(): TimerManager {
         val tm = mockk<TimerManager>()
         coEvery { tm.getActiveTimers() } returns emptyList()
@@ -85,7 +94,7 @@ class AmbientViewModelTest {
             every { tm.status } returns MutableStateFlow(ThermalLevel.NORMAL)
             val md = mockk<MulticastDiscovery>()
             every { md.speakers } returns MutableStateFlow(emptyList())
-            AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager())
+            AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager(), stubSaverProvider())
         }
         advanceUntilIdle()
 
@@ -110,7 +119,7 @@ class AmbientViewModelTest {
             every { tm.status } returns MutableStateFlow(ThermalLevel.NORMAL)
             val md = mockk<MulticastDiscovery>()
             every { md.speakers } returns MutableStateFlow(emptyList())
-            AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager())
+            AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager(), stubSaverProvider())
         }
         advanceUntilIdle()
         assertThat(vm.snapshot.value.recentDeviceActivity).isEmpty()
@@ -142,7 +151,7 @@ class AmbientViewModelTest {
         val md = mockk<MulticastDiscovery>()
         every { md.speakers } returns MutableStateFlow(emptyList())
 
-        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager())
+        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager(), stubSaverProvider())
         advanceUntilIdle()
 
         assertThat(vm.snapshot.value.batteryLevel).isEqualTo(42)
@@ -170,7 +179,7 @@ class AmbientViewModelTest {
         val md = mockk<MulticastDiscovery>()
         every { md.speakers } returns MutableStateFlow(emptyList())
 
-        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager())
+        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager(), stubSaverProvider())
         advanceUntilIdle()
         assertThat(vm.snapshot.value.thermalBucket).isNull()
 
@@ -210,7 +219,7 @@ class AmbientViewModelTest {
 
         announcement.setAnnouncement("dinner ready", ttlSeconds = 600, from = "kitchen")
 
-        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, announcement, emptyTimerManager())
+        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, announcement, emptyTimerManager(), stubSaverProvider())
         advanceUntilIdle()
 
         assertThat(vm.snapshot.value.announcementText).isEqualTo("dinner ready")
@@ -238,7 +247,7 @@ class AmbientViewModelTest {
         val md = mockk<MulticastDiscovery>()
         every { md.speakers } returns peers
 
-        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager())
+        val vm = AmbientViewModel(deviceManager, builder, te, bm, tm, md, AnnouncementState(TestScope()), emptyTimerManager(), stubSaverProvider())
         advanceUntilIdle()
         assertThat(vm.snapshot.value.nearbySpeakerCount).isEqualTo(0)
 
@@ -277,7 +286,7 @@ class AmbientViewModelTest {
             deviceManager, builder, te, bm, thm, md,
             AnnouncementState(TestScope()),
             timerManager
-        )
+        , stubSaverProvider())
         // Initial value before any subscriber collects is empty.
         assertThat(vm.activeTimers.value).isEmpty()
 
@@ -319,7 +328,7 @@ class AmbientViewModelTest {
             deviceManager, builder, te, bm, thm, md,
             AnnouncementState(TestScope()),
             timerManager
-        )
+        , stubSaverProvider())
         val collector = vm.activeTimers.onEach { /* drain */ }.launchIn(backgroundScope)
         advanceTimeBy(50L)
         assertThat(vm.activeTimers.value.single().remainingSeconds).isEqualTo(60)
@@ -355,11 +364,46 @@ class AmbientViewModelTest {
             deviceManager, builder, te, bm, thm, md,
             AnnouncementState(TestScope()),
             timerManager
-        )
+        , stubSaverProvider())
 
         vm.onCancelTimer("timer_xyz")
         advanceUntilIdle()
 
         coVerify { timerManager.cancelTimer("timer_xyz") }
+    }
+
+    @Test
+    fun `snapshot reflects saver reason from provider`() = runTest {
+        val deviceManager: DeviceManager = mockk()
+        every { deviceManager.devices } returns MutableStateFlow(emptyMap())
+        val builder = AmbientSnapshotBuilder(clock = { 0L })
+        val te = io.mockk.mockk<com.opendash.app.tool.ToolExecutor>(relaxed = true)
+        val bm = mockk<BatteryMonitor>()
+        every { bm.status } returns MutableStateFlow(BatteryStatus(level = 100, isCharging = true))
+        val thm = mockk<ThermalMonitor>()
+        every { thm.status } returns MutableStateFlow(ThermalLevel.NORMAL)
+        val md = mockk<MulticastDiscovery>()
+        every { md.speakers } returns MutableStateFlow(emptyList())
+
+        val saverFlow = MutableStateFlow(SaverState())
+        val saverProvider = mockk<SaverStateProvider>()
+        every { saverProvider.state } returns saverFlow
+
+        val vm = AmbientViewModel(
+            deviceManager, builder, te, bm, thm, md,
+            AnnouncementState(TestScope()), emptyTimerManager(), saverProvider
+        )
+        advanceUntilIdle()
+        assertThat(vm.snapshot.value.saverActive).isFalse()
+        assertThat(vm.snapshot.value.saverReason).isEqualTo(SaverReason.NONE)
+
+        saverFlow.value = SaverState(
+            preferenceEnabled = true,
+            batteryLow = true
+        )
+        advanceUntilIdle()
+
+        assertThat(vm.snapshot.value.saverActive).isTrue()
+        assertThat(vm.snapshot.value.saverReason).isEqualTo(SaverReason.BATTERY_LOW)
     }
 }
