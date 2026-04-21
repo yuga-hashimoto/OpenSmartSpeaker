@@ -21,6 +21,7 @@ Tablet-first Android smart speaker with on-device LLM agent, inspired by Alexa a
 - **[Permissions](permissions.md)** — runtime + special permissions
 - **[Privacy & data flow](privacy.md)** — what stays on device, what can leave, how to disable each channel
 - **[Tablet control cookbook](tablet-control-cookbook.md)** — Phase 15 recipes (open apps, tap buttons, reply to notifications) without root
+- **[Termux Bridge (advanced)](termux-bridge.md)** — opt-in shell access through a locally-installed Termux app, with 3 gates + command allowlist
 - **[Multi-room quickstart](multi-room-quickstart.md)** — how to pair two tablets and broadcast
 - **[Multi-room protocol](multi-room-protocol.md)** — WebSocket message bus design
 - **[Multi-room FAQ](multi-room-faq.md)** — answers to common questions about pairing, privacy, and scope
