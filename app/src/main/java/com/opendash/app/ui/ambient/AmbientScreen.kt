@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -40,7 +41,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.opendash.app.R
 import com.opendash.app.ui.common.isExpandedLandscape
+import com.opendash.app.util.SaverReason
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -269,6 +273,25 @@ private fun ClockBlock(snapshot: AmbientSnapshot, now: LocalDateTime, centered: 
                         text = bucket.lowercase().replaceFirstChar { it.uppercase() },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            if (snapshot.saverActive) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.BatterySaver,
+                        contentDescription = stringResource(R.string.saver_chip_icon_description),
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                    Text(
+                        text = when (snapshot.saverReason) {
+                            SaverReason.BATTERY_LOW -> stringResource(R.string.saver_chip_battery)
+                            SaverReason.THERMAL_THROTTLE -> stringResource(R.string.saver_chip_thermal)
+                            SaverReason.NONE -> ""
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary
                     )
                 }
             }

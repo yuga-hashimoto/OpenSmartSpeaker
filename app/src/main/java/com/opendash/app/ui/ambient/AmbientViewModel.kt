@@ -10,6 +10,7 @@ import com.opendash.app.tool.system.TimerInfo
 import com.opendash.app.tool.system.TimerManager
 import com.opendash.app.util.BatteryMonitor
 import com.opendash.app.util.MulticastDiscovery
+import com.opendash.app.util.SaverStateProvider
 import com.opendash.app.util.ThermalLevel
 import com.opendash.app.util.ThermalMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +42,8 @@ class AmbientViewModel @Inject constructor(
     private val thermalMonitor: ThermalMonitor,
     private val multicastDiscovery: MulticastDiscovery,
     private val announcementState: AnnouncementState,
-    private val timerManager: TimerManager
+    private val timerManager: TimerManager,
+    private val saverStateProvider: SaverStateProvider
 ) : ViewModel() {
 
     private val _snapshot = MutableStateFlow(AmbientSnapshot(nowMs = System.currentTimeMillis()))
@@ -85,8 +87,10 @@ class AmbientViewModel @Inject constructor(
             // 5-arity combine: deviceMap, battery, thermal, peers, announcement.
             // AnnouncementState is an independent push source that can fire
             // without any other input changing, so it joins the existing
-            // four flows here rather than via a side-channel.
-            combine(
+            // four flows here rather than via a side-channel. Saver state
+            // folds in on top via a nested combine because kotlinx.combine
+            // caps at 5 parameters.
+            val coreSnapshot = combine(
                 deviceManager.devices,
                 batteryMonitor.status,
                 thermalMonitor.status,
@@ -103,6 +107,9 @@ class AmbientViewModel @Inject constructor(
                     announcementText = announcement?.text,
                     announcementFrom = announcement?.from
                 )
+            }
+            combine(coreSnapshot, saverStateProvider.state) { snap, saver ->
+                snap.copy(saverReason = saver.reason)
             }.collect { _snapshot.value = it }
         }
     }

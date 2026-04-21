@@ -345,4 +345,9 @@
     <string name="settings_termux_bridge_status_permission_granted">RUN_COMMAND権限が付与済み</string>
     <string name="settings_termux_bridge_status_permission_missing">RUN_COMMAND権限が未付与</string>
     <string name="settings_termux_bridge_gate_reminder">上記すべてにチェックが付くまで、termux_shell_exec はアシスタントに公開されません。</string>
+
+    <!-- P14.8 バッテリー / 熱セーバー表示チップ (Ambient + Home) -->
+    <string name="saver_chip_battery">バッテリーセーバー有効 — ウェイクワード停止中</string>
+    <string name="saver_chip_thermal">サーマルセーバー有効 — ウェイクワード停止中</string>
+    <string name="saver_chip_icon_description">セーバー有効</string>
 </resources>
