@@ -150,4 +150,14 @@ object PreferenceKeys {
      * or the localized Default label if nothing matches".
      */
     val DEFAULT_NEWS_FEED_LABEL = stringPreferencesKey("default_news_feed_label")
+
+    /**
+     * P19.2 Termux Bridge opt-in. When `true` AND the `com.termux` app is
+     * installed AND the `com.termux.permission.RUN_COMMAND` runtime
+     * permission is granted, `TermuxBridgeToolExecutor` advertises
+     * `termux_shell_exec` to the LLM. Defaults to `false` because the
+     * tool lets the agent run arbitrary shell (`rm`, `curl`, …) on the
+     * device — it must be a deliberate, reversible opt-in.
+     */
+    val TERMUX_SHELL_EXECUTE_ENABLED = booleanPreferencesKey("termux_shell_execute_enabled")
 }

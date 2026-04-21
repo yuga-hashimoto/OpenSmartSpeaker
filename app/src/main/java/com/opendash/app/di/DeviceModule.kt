@@ -332,6 +332,24 @@ object DeviceModule {
     fun provideSkillScriptRuntime(): com.opendash.app.assistant.skills.runtime.SkillScriptRuntime =
         com.opendash.app.assistant.skills.runtime.StubSkillScriptRuntime()
 
+    // P19.2: Termux Bridge (opt-in advanced tool). TermuxAvailability checks
+    // package presence + runtime permission; the tool executor adds the
+    // TERMUX_SHELL_EXECUTE_ENABLED preference gate on top so both must be
+    // flipped on before the LLM ever sees `termux_shell_exec`.
+    @Provides
+    @Singleton
+    fun provideTermuxAvailability(
+        @ApplicationContext context: Context
+    ): com.opendash.app.tool.termux.TermuxAvailability =
+        com.opendash.app.tool.termux.ContextTermuxAvailability(context)
+
+    @Provides
+    @Singleton
+    fun provideTermuxBridge(
+        @ApplicationContext context: Context
+    ): com.opendash.app.tool.termux.TermuxBridge =
+        com.opendash.app.tool.termux.IntentTermuxBridge(context)
+
     @Provides
     @Singleton
     fun provideMemoryRepository(
@@ -471,7 +489,9 @@ object DeviceModule {
         announcementBroadcaster: com.opendash.app.multiroom.AnnouncementBroadcaster,
         multicastDiscovery: com.opendash.app.util.MulticastDiscovery,
         localeManager: com.opendash.app.util.LocaleManager,
-        appPreferences: AppPreferences
+        appPreferences: AppPreferences,
+        termuxAvailability: com.opendash.app.tool.termux.TermuxAvailability,
+        termuxBridge: com.opendash.app.tool.termux.TermuxBridge
     ): ToolExecutor {
         val routineStore = RoomRoutineStore(routineDao, moshi)
         val compositeHolder = arrayOfNulls<CompositeToolExecutor>(1)
@@ -598,6 +618,15 @@ object DeviceModule {
             com.opendash.app.tool.multiroom.HandoffToolExecutor(
                 broadcaster = announcementBroadcaster,
                 historyProvider = { emptyList() }
+            ),
+            // P19.2 Termux Bridge — self-gates to empty tool list unless
+            // Termux is installed, the runtime permission is granted, AND
+            // TERMUX_SHELL_EXECUTE_ENABLED=true. So it's always registered
+            // but invisible until the user opts in.
+            com.opendash.app.tool.termux.TermuxBridgeToolExecutor(
+                availability = termuxAvailability,
+                bridge = termuxBridge,
+                preferences = appPreferences
             )
             )
         )
