@@ -345,6 +345,9 @@
     <string name="settings_termux_bridge_status_permission_granted">RUN_COMMAND権限が付与済み</string>
     <string name="settings_termux_bridge_status_permission_missing">RUN_COMMAND権限が未付与</string>
     <string name="settings_termux_bridge_gate_reminder">上記すべてにチェックが付くまで、termux_shell_exec はアシスタントに公開されません。</string>
+    <string name="settings_termux_allowlist_label">コマンド許可リスト (任意)</string>
+    <string name="settings_termux_allowlist_placeholder">/data/data/com.termux/files/usr/bin/git, ...</string>
+    <string name="settings_termux_allowlist_hint">カンマ区切りの絶対パス。設定時はリスト上のコマンドのみ実行可能。空欄で制限なし。</string>
 
     <!-- P14.8 バッテリー / 熱セーバー表示チップ (Ambient + Home) -->
     <string name="saver_chip_battery">バッテリーセーバー有効 — ウェイクワード停止中</string>

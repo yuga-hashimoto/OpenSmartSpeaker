@@ -42,7 +42,13 @@ class TermuxSettingsViewModel @Inject constructor(
     data class UiState(
         val enabled: Boolean = false,
         val termuxInstalled: Boolean = false,
-        val permissionGranted: Boolean = false
+        val permissionGranted: Boolean = false,
+        /**
+         * Raw contents of [PreferenceKeys.TERMUX_COMMAND_ALLOWLIST] —
+         * rendered verbatim in the Settings text field. Parsing happens
+         * in `TermuxBridgeToolExecutor.readAllowlist` at dispatch time.
+         */
+        val allowlistCsv: String = ""
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -53,6 +59,11 @@ class TermuxSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             preferences.observe(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED).collect { value ->
                 _state.update { it.copy(enabled = value ?: false) }
+            }
+        }
+        viewModelScope.launch {
+            preferences.observe(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST).collect { value ->
+                _state.update { it.copy(allowlistCsv = value.orEmpty()) }
             }
         }
     }
@@ -74,6 +85,12 @@ class TermuxSettingsViewModel @Inject constructor(
     fun setEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferences.set(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED, enabled)
+        }
+    }
+
+    fun setAllowlistCsv(csv: String) {
+        viewModelScope.launch {
+            preferences.set(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST, csv)
         }
     }
 }

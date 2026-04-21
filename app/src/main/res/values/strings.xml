@@ -344,6 +344,9 @@
     <string name="settings_termux_bridge_status_permission_granted">RUN_COMMAND permission granted</string>
     <string name="settings_termux_bridge_status_permission_missing">RUN_COMMAND permission missing</string>
     <string name="settings_termux_bridge_gate_reminder">The termux_shell_exec tool stays hidden from the assistant until all items above show a check mark.</string>
+    <string name="settings_termux_allowlist_label">Command allowlist (optional)</string>
+    <string name="settings_termux_allowlist_placeholder">/data/data/com.termux/files/usr/bin/git, ...</string>
+    <string name="settings_termux_allowlist_hint">Comma-separated absolute binary paths. When set, the assistant can only run commands on this list. Leave empty for no restriction.</string>
 
     <!-- P14.8 Battery / thermal saver indicator chip (Ambient + Home) -->
     <string name="saver_chip_battery">Battery saver active — wake word paused</string>

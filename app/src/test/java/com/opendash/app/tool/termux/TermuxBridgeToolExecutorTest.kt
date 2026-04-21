@@ -22,12 +22,17 @@ class TermuxBridgeToolExecutorTest {
         availability = ToggleableTermuxAvailability()
         bridge = FakeTermuxBridge()
         preferences = mockk()
-        // Default: preference unset (null -> treated as false by the executor)
+        // Default: both preferences unset (null -> treated as disabled / no allowlist)
         every { preferences.observe(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED) } returns flowOf(null)
+        every { preferences.observe(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST) } returns flowOf(null)
     }
 
     private fun setPreferenceEnabled(value: Boolean?) {
         every { preferences.observe(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED) } returns flowOf(value)
+    }
+
+    private fun setAllowlist(csv: String?) {
+        every { preferences.observe(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST) } returns flowOf(csv)
     }
 
     private fun newExecutor() = TermuxBridgeToolExecutor(
@@ -222,5 +227,81 @@ class TermuxBridgeToolExecutorTest {
 
         assertThat(result.success).isFalse()
         assertThat(result.error).contains("SecurityException")
+    }
+
+    @Test
+    fun `empty allowlist disables the filter`() = runTest {
+        availability.installed = true
+        availability.permitted = true
+        setPreferenceEnabled(true)
+        setAllowlist("")
+        bridge.nextResult = TermuxResult.Success("ok", "", 0)
+
+        val result = newExecutor().execute(
+            ToolCall(id = "x", name = "termux_shell_exec", arguments = mapOf("command" to "/bin/sh"))
+        )
+
+        assertThat(result.success).isTrue()
+    }
+
+    @Test
+    fun `allowlist rejects commands not on the list`() = runTest {
+        availability.installed = true
+        availability.permitted = true
+        setPreferenceEnabled(true)
+        setAllowlist("/data/data/com.termux/files/usr/bin/git")
+
+        val result = newExecutor().execute(
+            ToolCall(
+                id = "x", name = "termux_shell_exec",
+                arguments = mapOf("command" to "/system/bin/rm")
+            )
+        )
+
+        assertThat(result.success).isFalse()
+        assertThat(result.error).contains("allowlist")
+        assertThat(result.error).contains("/system/bin/rm")
+        // Bridge should not have been called at all.
+        assertThat(bridge.lastRequest).isNull()
+    }
+
+    @Test
+    fun `allowlist permits commands on the list`() = runTest {
+        availability.installed = true
+        availability.permitted = true
+        setPreferenceEnabled(true)
+        setAllowlist(" /data/data/com.termux/files/usr/bin/git , /usr/bin/ls ")
+        bridge.nextResult = TermuxResult.Success("ok", "", 0)
+
+        val result = newExecutor().execute(
+            ToolCall(
+                id = "x", name = "termux_shell_exec",
+                arguments = mapOf("command" to "/data/data/com.termux/files/usr/bin/git")
+            )
+        )
+
+        assertThat(result.success).isTrue()
+        assertThat(bridge.lastRequest?.command)
+            .isEqualTo("/data/data/com.termux/files/usr/bin/git")
+    }
+
+    @Test
+    fun `allowlist whitespace-only entries are ignored`() = runTest {
+        availability.installed = true
+        availability.permitted = true
+        setPreferenceEnabled(true)
+        // " ,  ,  " — all entries blank after trim, so the filter should be
+        // inactive, same as an empty string.
+        setAllowlist(" ,  ,  ")
+        bridge.nextResult = TermuxResult.Success("ok", "", 0)
+
+        val result = newExecutor().execute(
+            ToolCall(
+                id = "x", name = "termux_shell_exec",
+                arguments = mapOf("command" to "/anything")
+            )
+        )
+
+        assertThat(result.success).isTrue()
     }
 }

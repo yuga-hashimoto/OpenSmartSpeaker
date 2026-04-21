@@ -160,4 +160,16 @@ object PreferenceKeys {
      * device — it must be a deliberate, reversible opt-in.
      */
     val TERMUX_SHELL_EXECUTE_ENABLED = booleanPreferencesKey("termux_shell_execute_enabled")
+
+    /**
+     * P19.2 Termux command allowlist (defense in depth). Comma-separated
+     * absolute binary paths the bridge is allowed to invoke. Empty / unset
+     * means "no allowlist, the LLM can pick any command" — matches the
+     * pre-allowlist behavior. When non-empty, `TermuxBridgeToolExecutor`
+     * rejects any [TermuxRequest.command] that isn't on the list BEFORE
+     * dispatching, so the LLM cannot execute e.g. `/system/bin/rm` when
+     * the user only wanted to expose `/data/data/com.termux/files/usr/bin/git`.
+     * Runtime-mutable; no VM rebuild needed.
+     */
+    val TERMUX_COMMAND_ALLOWLIST = stringPreferencesKey("termux_command_allowlist")
 }

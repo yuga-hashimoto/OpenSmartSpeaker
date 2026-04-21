@@ -10,11 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -101,6 +105,39 @@ fun TermuxBridgeSettingsCard(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
+                Spacer(Modifier.height(12.dp))
+
+                // P19.2 defense-in-depth: per-command allowlist. Remembered
+                // locally for editing comfort; persists on every keystroke
+                // via onValueChange so there's no "Save" button to miss.
+                var allowlistText by remember(state.allowlistCsv) {
+                    mutableStateOf(state.allowlistCsv)
+                }
+                Text(
+                    text = stringResource(R.string.settings_termux_allowlist_label),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                OutlinedTextField(
+                    value = allowlistText,
+                    onValueChange = {
+                        allowlistText = it
+                        viewModel.setAllowlistCsv(it)
+                    },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.settings_termux_allowlist_placeholder),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = stringResource(R.string.settings_termux_allowlist_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

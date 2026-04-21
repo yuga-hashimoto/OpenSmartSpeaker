@@ -82,6 +82,15 @@ class TermuxBridgeToolExecutor(
         val command = call.arguments["command"] as? String
             ?: return ToolResult(call.id, false, "", "Missing command parameter")
 
+        val allowlist = readAllowlist()
+        if (allowlist.isNotEmpty() && command !in allowlist) {
+            return ToolResult(
+                call.id, false, "",
+                "Command '$command' is not on the Termux allowlist configured in Settings. " +
+                    "Allowed commands: ${allowlist.joinToString(", ")}"
+            )
+        }
+
         val arguments = when (val raw = call.arguments["arguments"]) {
             null -> emptyList()
             is List<*> -> raw.filterIsInstance<String>()
@@ -119,6 +128,20 @@ class TermuxBridgeToolExecutor(
         if (!availability.isAvailable()) return false
         val enabled = preferences.observe(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED).first()
         return enabled == true
+    }
+
+    /**
+     * Parse the comma-separated [PreferenceKeys.TERMUX_COMMAND_ALLOWLIST].
+     * Blank / empty entries are dropped. Returns an empty list when the
+     * preference is unset OR contains only whitespace — in that state the
+     * executor skips the allowlist check entirely.
+     */
+    private suspend fun readAllowlist(): List<String> {
+        val raw = preferences.observe(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST).first()
+            ?: return emptyList()
+        return raw.split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
     }
 
     private fun String.escapeJson(): String = replace("\\", "\\\\")

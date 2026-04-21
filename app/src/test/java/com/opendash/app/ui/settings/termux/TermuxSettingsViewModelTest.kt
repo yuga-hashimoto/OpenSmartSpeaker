@@ -136,10 +136,12 @@ class TermuxSettingsViewModelTest {
         every {
             prefs.observe(PreferenceKeys.TERMUX_SHELL_EXECUTE_ENABLED)
         } returns flow
-        every { prefs.observe<Any>(any<Preferences.Key<Any>>()) } answers {
-            @Suppress("UNCHECKED_CAST")
-            flow as Flow<Any?>
-        }
+        // P19.2 defense-in-depth — the VM also observes the allowlist
+        // preference. Stub with a static empty flow so observations don't
+        // leak Boolean values into a String<->String cast.
+        every {
+            prefs.observe(PreferenceKeys.TERMUX_COMMAND_ALLOWLIST)
+        } returns kotlinx.coroutines.flow.flowOf(null as String?)
         return prefs
     }
 
