@@ -84,9 +84,36 @@ class TtsManager(
         VoiceVoxEmbeddedFactory.createOrNull(context, preferences, httpClient)
     }
     private val piperProvider: PiperTtsProvider by lazy {
-        // Piper is a placeholder that falls back to Android system TTS until
-        // the piper-cpp JNI bindings land. See PiperTtsProvider.
-        PiperTtsProvider(androidTtsProvider)
+        // PiperTtsProvider routes through the native bridge when it's
+        // available AND a voice pair has been downloaded; otherwise it
+        // delegates to Android system TTS. All gates (lib + voice + load)
+        // are checked on each speak() so changing the active voice in
+        // Settings takes effect on the next utterance.
+        PiperTtsProvider(
+            fallback = androidTtsProvider,
+            voicePathProvider = { resolvePiperVoicePaths() },
+            pcmPlayer = AudioTrackPcmPlayer()
+        )
+    }
+
+    /**
+     * Resolves the file pair for the active voice id in
+     * [PreferenceKeys.PIPER_ACTIVE_VOICE_ID]. Unknown / empty falls
+     * back to the catalogue default so a first-run selection isn't
+     * needed before synthesis works.
+     */
+    private fun resolvePiperVoicePaths(): PiperTtsProvider.VoicePaths? {
+        val dir = java.io.File(context.filesDir, "piper").apply { mkdirs() }
+        val activeId = runBlocking {
+            preferences.observe(PreferenceKeys.PIPER_ACTIVE_VOICE_ID).first()
+        }
+        val voice = com.opendash.app.voice.tts.piper.PiperVoiceCatalog.all
+            .firstOrNull { it.id == activeId }
+            ?: com.opendash.app.voice.tts.piper.PiperVoiceCatalog.default
+        return PiperTtsProvider.VoicePaths(
+            model = java.io.File(dir, voice.modelFilename),
+            config = java.io.File(dir, voice.configFilename)
+        )
     }
 
     @Volatile private var currentProvider: TextToSpeech = androidTtsProvider
