@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(llama_jni)
+project(opendash_native)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -43,3 +43,16 @@ target_include_directories(llama_jni PRIVATE
     llama.cpp/include
     llama.cpp/ggml/include
 )
+
+# P14.1 whisper JNI. Only defined when the submodule is present; the
+# `if(TARGET whisper)` guard means if whisper.cpp was skipped above
+# (submodule not initialised), we also skip building whisper_jni so the
+# android gradle plugin doesn't try to package a missing .so.
+if(TARGET whisper)
+    add_library(whisper_jni SHARED whisper_jni.cpp)
+    target_link_libraries(whisper_jni whisper ${log-lib})
+    target_include_directories(whisper_jni PRIVATE
+        whisper.cpp/include
+        whisper.cpp/ggml/include
+    )
+endif()
