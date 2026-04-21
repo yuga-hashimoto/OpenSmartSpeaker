@@ -68,6 +68,15 @@
 
     <!-- Body sensors / high sampling rate: tablet-mounted health glance. -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
+
+    <!-- P19.2 Termux Bridge (opt-in, advanced). The agent can dispatch
+         shell commands to a locally-installed Termux app when the user
+         explicitly enables the bridge in Settings AND has Termux installed.
+         Both gates (Termux package presence AND TERMUX_SHELL_EXECUTE_ENABLED
+         preference) must be true before the `termux_shell_exec` tool is
+         advertised to the LLM, so revoking either turns the capability off
+         at the tool-list level. -->
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
     <!-- NFC: read tags ("scan this card to start the morning routine"). -->
@@ -126,6 +135,10 @@
         </intent>
         <package android:name="com.google.android.googlequicksearchbox" />
         <package android:name="com.google.android.tts" />
+        <!-- P19.2 Termux Bridge: PackageManager.getPackageInfo("com.termux")
+             is used by TermuxAvailability to gate the `termux_shell_exec`
+             tool. Android 11+ package visibility requires this entry. -->
+        <package android:name="com.termux" />
     </queries>
 
     <application

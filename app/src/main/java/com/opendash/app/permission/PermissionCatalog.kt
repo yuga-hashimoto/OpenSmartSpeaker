@@ -128,6 +128,16 @@ object PermissionCatalog {
             rationale = "Lets the agent read heart-rate from a connected wearable.",
             unlocks = listOf("device_health")
         ))
+        // P19.2 Termux Bridge — advanced, opt-in. Only surfaced when the
+        // user has installed Termux and toggled the Advanced → Developer
+        // tools switch; the `termux_shell_exec` tool also guards on the
+        // TERMUX_SHELL_EXECUTE_ENABLED preference.
+        add(Entry(
+            permission = "com.termux.permission.RUN_COMMAND",
+            title = "Termux shell access (advanced)",
+            rationale = "Lets the agent run shell commands through your Termux app. Advanced power-user feature. Grant only if you installed Termux intentionally and want the agent to use it.",
+            unlocks = listOf("termux_shell_exec")
+        ))
     }
 
     /** Special permissions that aren't granted via runtime request (Settings dialog). */
