@@ -43,9 +43,17 @@ class AnnouncementDispatcher(
      * to thread a Room-backed recorder through.
      */
     private val trafficRecorder: MultiroomTrafficRecorder? = null,
-    private val clock: () -> Long = { System.currentTimeMillis() }
+    private val clock: () -> Long = { System.currentTimeMillis() },
+    /**
+     * Coroutine scope used for fire-and-forget work (TTS speak,
+     * async timer calls). Injectable so tests can pass a TestScope and
+     * assert behavior with `runTest` + `advanceUntilIdle` without racing
+     * the default dispatcher's real thread pool. Production DI leaves
+     * the default in place.
+     */
+    private val scope: CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /**
      * Maximum timer duration a cross-speaker `start_timer` envelope can
