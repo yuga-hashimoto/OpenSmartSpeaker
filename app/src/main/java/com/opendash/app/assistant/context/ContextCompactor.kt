@@ -44,8 +44,9 @@ class ContextCompactor(
             return CompactResult(history, wasCompacted = false, removedCount = 0)
         }
 
-        val toSummarize = rest.dropLast(keepRecent)
-        val recent = rest.takeLast(keepRecent)
+        val split = findSafeSplit(rest)
+        val toSummarize = rest.subList(0, split).toList()
+        val recent = rest.subList(split, rest.size).toList()
 
         val summaryText = try {
             summarizer?.summarize(toSummarize) ?: naiveSummary(toSummarize)
@@ -70,6 +71,38 @@ class ContextCompactor(
             wasCompacted = true,
             removedCount = toSummarize.size
         )
+    }
+
+    /**
+     * Choose the split index in [rest] such that `rest[split]` starts a
+     * new User turn. This guarantees the retained slice is a well-formed
+     * sequence of User → Assistant (possibly with tool calls + results)
+     * pairs. Naive `size - keepRecent` slicing risks starting the
+     * retained slice with an orphaned ToolCallResult or a bare Assistant
+     * continuation, which OpenAI-shaped APIs and our own chat templates
+     * both reject.
+     *
+     * Strategy: start from the naive split; walk forward to the next
+     * User turn (gives a smaller recent slice, preferred). If the tail
+     * is all tool traffic, walk backward instead. If no User turn exists
+     * at all, fall back to index 0 — summarize everything, keep nothing.
+     */
+    private fun findSafeSplit(rest: List<AssistantMessage>): Int {
+        val naive = (rest.size - keepRecent).coerceAtLeast(0)
+        // Already aligned?
+        if (naive < rest.size && rest[naive] is AssistantMessage.User) return naive
+
+        // Walk forward.
+        var fwd = naive + 1
+        while (fwd < rest.size && rest[fwd] !is AssistantMessage.User) fwd++
+        if (fwd < rest.size) return fwd
+
+        // Walk backward.
+        var back = naive - 1
+        while (back >= 0 && rest[back] !is AssistantMessage.User) back--
+        if (back >= 0) return back
+
+        return 0
     }
 
     /**
