@@ -8,6 +8,8 @@ import android.media.ToneGenerator
 import android.os.Build
 import com.opendash.app.assistant.agent.AgentToolDispatcher
 import com.opendash.app.assistant.context.ContextCompactor
+import com.opendash.app.tool.cache.CachingToolExecutor
+import com.opendash.app.tool.cache.RefreshIntent
 import com.opendash.app.assistant.model.AssistantMessage
 import com.opendash.app.assistant.model.AssistantSession
 import com.opendash.app.assistant.router.ConversationRouter
@@ -292,6 +294,16 @@ class VoicePipeline(
         _partialText.value = text
         _lastResponse.value = ""
         resetWatchdog()
+
+        // Cache-bypass when the user explicitly asks for fresh data
+        // ("latest weather", "最新の天気", "refresh"). Clear the cache
+        // *before* routing so both fast-path and LLM paths hit the
+        // delegate directly. The cache rebuilds naturally on the next
+        // identical query within the TTL window.
+        if (RefreshIntent.matches(text)) {
+            (toolExecutor as? CachingToolExecutor)?.clear()
+            Timber.d("RefreshIntent matched — cleared tool result cache")
+        }
 
         // Fast path: match common intents and execute directly, skipping LLM round-trip.
         // Target <200ms from final STT to spoken confirmation (Priority 1).
