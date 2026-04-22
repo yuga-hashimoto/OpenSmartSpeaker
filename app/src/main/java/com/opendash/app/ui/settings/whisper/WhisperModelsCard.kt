@@ -13,6 +13,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ fun WhisperModelsCard(
 ) {
     val rows by viewModel.rows.collectAsState()
     val language by viewModel.language.collectAsState()
+    val translate by viewModel.translate.collectAsState()
 
     Card(
         modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -96,6 +98,30 @@ fun WhisperModelsCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.settings_whisper_translate_title),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_whisper_translate_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = translate,
+                    onCheckedChange = { viewModel.setTranslate(it) }
+                )
             }
         }
     }

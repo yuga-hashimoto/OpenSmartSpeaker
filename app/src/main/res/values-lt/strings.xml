@@ -377,4 +377,7 @@
     <!-- P14.1 Whisper transcription language -->
     <string name="settings_whisper_language_title">Transcription language</string>
     <string name="settings_whisper_language_hint">Auto-detect is slower and occasionally picks the wrong language. Force a specific one when you know the household speaks mostly English or Japanese.</string>
+
+    <string name="settings_whisper_translate_title">Translate to English</string>
+    <string name="settings_whisper_translate_hint">Convert non-English speech to English at transcription time. Useful when the downstream agent only understands English.</string>
 </resources>
