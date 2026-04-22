@@ -2,7 +2,6 @@ package com.opendash.app.tool.system
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import timber.log.Timber
@@ -60,7 +59,9 @@ class AndroidMediaPlayerAlarmPlayer(
                 )
                 setDataSource(context, uri)
                 isLooping = true
-                setAudioStreamType(AudioManager.STREAM_ALARM)
+                // setAudioStreamType is deprecated since API 26; we already
+                // drive stream selection via setAudioAttributes(USAGE_ALARM)
+                // above, which is the modern replacement.
                 prepare()
                 start()
             }
