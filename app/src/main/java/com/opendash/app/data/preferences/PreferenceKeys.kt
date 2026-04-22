@@ -200,4 +200,14 @@ object PreferenceKeys {
      * runs.
      */
     val WHISPER_LANGUAGE = stringPreferencesKey("whisper_language")
+
+    /**
+     * P14.1 Whisper translate-to-English toggle. When true, whisper.cpp
+     * translates non-English utterances into English at synthesis time
+     * instead of transcribing them in the source language. Default
+     * false — matches the Android system STT contract (transcribe in
+     * the source language). Useful for multilingual households where
+     * the downstream agent is English-only.
+     */
+    val WHISPER_TRANSLATE_TO_ENGLISH = booleanPreferencesKey("whisper_translate_to_english")
 }

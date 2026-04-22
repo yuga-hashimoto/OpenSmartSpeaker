@@ -376,4 +376,6 @@
     <!-- P14.1 Whisper音声認識言語 -->
     <string name="settings_whisper_language_title">認識言語</string>
     <string name="settings_whisper_language_hint">自動検出は少し遅く、まれに誤検出します。日本語もしくは英語のみ話す環境なら明示指定を推奨。</string>
+    <string name="settings_whisper_translate_title">英語に翻訳する</string>
+    <string name="settings_whisper_translate_hint">英語以外の発話を認識と同時に英語化します。下流のエージェントが英語のみ対応の場合に有用です。</string>
 </resources>

@@ -67,7 +67,8 @@ object SttModule {
                 bridge = WhisperCppBridge(),
                 pcmSource = AudioRecordPcmSource(context),
                 modelPathProvider = { resolveWhisperModelFile(context, preferences) },
-                languageProvider = { resolveWhisperLanguage(preferences) }
+                languageProvider = { resolveWhisperLanguage(preferences) },
+                translateProvider = { resolveWhisperTranslate(preferences) }
             )
         } else {
             OfflineSttStub("Whisper")
@@ -100,6 +101,16 @@ object SttModule {
             preferences.observe(PreferenceKeys.WHISPER_LANGUAGE).first()
         }
         return raw?.trim().orEmpty().ifBlank { "auto" }
+    }
+
+    /**
+     * Reads [PreferenceKeys.WHISPER_TRANSLATE_TO_ENGLISH] at call time.
+     * Empty / unset → false (transcribe in source language).
+     */
+    internal fun resolveWhisperTranslate(preferences: AppPreferences): Boolean {
+        return runBlocking {
+            preferences.observe(PreferenceKeys.WHISPER_TRANSLATE_TO_ENGLISH).first()
+        } ?: false
     }
 
     /**

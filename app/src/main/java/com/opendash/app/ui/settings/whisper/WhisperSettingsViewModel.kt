@@ -147,6 +147,25 @@ class WhisperSettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Current translate-to-English toggle. Default false.
+     */
+    val translate: StateFlow<Boolean> = preferences
+        .observe(PreferenceKeys.WHISPER_TRANSLATE_TO_ENGLISH)
+        .let { flow ->
+            kotlinx.coroutines.flow.MutableStateFlow(false).also { backing ->
+                viewModelScope.launch {
+                    flow.collect { backing.value = it == true }
+                }
+            }
+        }
+
+    fun setTranslate(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.set(PreferenceKeys.WHISPER_TRANSLATE_TO_ENGLISH, enabled)
+        }
+    }
+
     companion object {
         /**
          * Whitelist for the picker. whisper.cpp speaks 99 languages; we

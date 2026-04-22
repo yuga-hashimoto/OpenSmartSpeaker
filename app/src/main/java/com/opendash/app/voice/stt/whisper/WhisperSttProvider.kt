@@ -43,7 +43,12 @@ class WhisperSttProvider(
      * "auto". Defaults to "auto".
      */
     private val languageProvider: () -> String = { "auto" },
-    private val translate: Boolean = false,
+    /**
+     * Resolved per-utterance so the Settings toggle takes effect on
+     * the next speak. When true, whisper translates non-English
+     * utterances into English instead of transcribing them literally.
+     */
+    private val translateProvider: () -> Boolean = { false },
     private val maxSeconds: Int = MAX_CAPTURE_SECONDS_DEFAULT,
     private val availabilityCheck: () -> Boolean = { WhisperCppBridge.isAvailable() }
 ) : SpeechToText {
@@ -91,7 +96,8 @@ class WhisperSttProvider(
 
             val text = try {
                 val lang = languageProvider().ifBlank { "auto" }
-                bridge.transcribe(samples, language = lang, translate = translate).trim()
+                val tr = translateProvider()
+                bridge.transcribe(samples, language = lang, translate = tr).trim()
             } catch (e: Exception) {
                 Timber.w(e, "whisper_full threw")
                 emit(SttResult.Error("Whisper transcription failed: ${e.message.orEmpty()}"))
