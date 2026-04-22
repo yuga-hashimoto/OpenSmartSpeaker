@@ -27,6 +27,11 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <!-- Android 14+ partial-access fallback. When the user grants only the
+         selected-photos permission (instead of full READ_MEDIA_*), MediaStore
+         still returns whatever URIs the user picked, which is the exact shape
+         AndroidMediaLibraryProvider already handles. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -68,7 +73,9 @@
          walking / in a vehicle (e.g. switch to commute briefing). -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
-    <!-- Body sensors / high sampling rate: tablet-mounted health glance. -->
+    <!-- Body sensors: tablet-mounted health glance (reads heart rate off a paired wearable).
+         HIGH_SAMPLING_RATE_SENSORS (>200Hz) is intentionally NOT declared — we only
+         need low-frequency polling, and Play Store policy reviews the high-rate permission. -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
 
     <!-- P19.2 Termux Bridge (opt-in, advanced). The agent can dispatch
@@ -79,7 +86,6 @@
          advertised to the LLM, so revoking either turns the capability off
          at the tool-list level. -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
-    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
     <!-- NFC: read tags ("scan this card to start the morning routine"). -->
     <uses-permission android:name="android.permission.NFC" />
