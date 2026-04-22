@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
 import com.opendash.app.assistant.agent.AgentToolDispatcher
+import com.opendash.app.assistant.context.ContextCompactor
 import com.opendash.app.assistant.model.AssistantMessage
 import com.opendash.app.assistant.model.AssistantSession
 import com.opendash.app.assistant.router.ConversationRouter
@@ -54,7 +55,11 @@ class VoicePipeline(
     private val fastPathRouter: FastPathRouter? = null,
     private val latencyRecorder: LatencyRecorder = LatencyRecorder(),
     private val fastPathLlmPolisher: FastPathLlmPolisher = FastPathLlmPolisher(),
-    private val toolDispatcher: AgentToolDispatcher = AgentToolDispatcher(toolExecutor, moshi)
+    private val toolDispatcher: AgentToolDispatcher = AgentToolDispatcher(toolExecutor, moshi),
+    private val contextCompactor: ContextCompactor = ContextCompactor(
+        maxMessages = 50,
+        keepRecent = 30
+    )
 ) {
     /** Exposed for diagnostics / Settings debug screen. */
     fun latencySummary() = latencyRecorder.summarize()
@@ -963,13 +968,22 @@ class VoicePipeline(
 
     // --- Conversation History ---
 
-    private fun trimConversationHistory() {
-        val maxMessages = 50
-        if (conversationHistory.size > maxMessages) {
-            val systemMessages = conversationHistory.filterIsInstance<AssistantMessage.System>()
-            val recentMessages = conversationHistory.takeLast(maxMessages - systemMessages.size)
+    /**
+     * Compact the history via the injected [ContextCompactor]. Preserves
+     * initial System messages, replaces older middle turns with a single
+     * summary System message, and snaps the split point to a User turn
+     * so tool_call / tool_result pairs never get orphaned — malformed
+     * pairs would make OpenAI-compatible providers reject the request.
+     *
+     * Suspend because the summarizer (if any) is async; no-op when the
+     * history is below the compactor's threshold.
+     */
+    private suspend fun trimConversationHistory() {
+        val compacted = contextCompactor.compact(conversationHistory.toList())
+        if (compacted.wasCompacted) {
             conversationHistory.clear()
-            conversationHistory.addAll(systemMessages + recentMessages)
+            conversationHistory.addAll(compacted.messages)
+            Timber.d("Compacted history — removed ${compacted.removedCount} old messages")
         }
     }
 
