@@ -380,4 +380,15 @@
 
     <string name="settings_whisper_translate_title">Translate to English</string>
     <string name="settings_whisper_translate_hint">Convert non-English speech to English at transcription time. Useful when the downstream agent only understands English.</string>
+
+    <!-- Offline stack diagnostic card -->
+    <string name="settings_offline_stack_title">Offline stack status</string>
+    <string name="settings_offline_stack_hint">At-a-glance view of whether the on-device STT and TTS are ready to use. Both require the native libraries to be built AND a model/voice to be downloaded.</string>
+    <string name="settings_offline_stack_stt_heading">Speech-to-text (Whisper)</string>
+    <string name="settings_offline_stack_tts_heading">Text-to-speech (Piper)</string>
+    <string name="settings_offline_stack_ready">Ready</string>
+    <string name="settings_offline_stack_missing">Not ready</string>
+    <string name="settings_offline_stack_lib">Native library loaded</string>
+    <string name="settings_offline_stack_model">Active model downloaded</string>
+    <string name="settings_offline_stack_voice">Active voice downloaded</string>
 </resources>
